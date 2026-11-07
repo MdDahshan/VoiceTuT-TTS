@@ -124,13 +124,24 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 10px;
+  outline: 1px solid var(--border-interactive);
+  outline-offset: 1px;
 }
 
-::selection {
-  background: var(--accent-ring);
+::selection,
+*::selection,
+input::selection,
+textarea::selection {
+  background: #393939;
+  color: #FFFFFF;
+}
+
+::-moz-selection,
+*::-moz-selection,
+input::-moz-selection,
+textarea::-moz-selection {
+  background: #393939;
+  color: #FFFFFF;
 }
 
 .ltr {
@@ -5151,7 +5162,7 @@ svg {
 
 .figma-primary-cta {
   padding: 8px 16px;
-  border-radius: 999px;
+  border-radius: 8px;
   background: var(--bg-control-default);
   color: var(--text-primary);
   font-weight: 600;
@@ -5363,6 +5374,17 @@ svg {
 .figma-input:focus,
 .figma-select:focus {
   border-color: hsl(0, 0%, 40%);
+}
+
+.figma-select option {
+  background: #262626;
+  color: #E5E7EB;
+}
+
+.figma-select option:checked,
+.figma-select option:hover {
+  background: #252525;
+  color: #FFFFFF;
 }
 
 /* 5.2 Buttons & Action Grids */
@@ -5776,13 +5798,13 @@ svg {
   text-align: left;
 }
 
-.figma-speaker-row-btn:hover {
+.figma-speaker-row-btn:hover:not(.active) {
   background: var(--bg-surface-card);
 }
 
 .figma-speaker-row-btn.active {
-  background: var(--bg-surface-card);
-  border-color: var(--border-interactive);
+  background: #252525;
+  border-color: #383838;
 }
 
 .figma-speaker-row-left {
