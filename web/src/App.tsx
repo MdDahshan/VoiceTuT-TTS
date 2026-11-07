@@ -1,20 +1,51 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, CheckCircle2, Info as InfoIcon, Sparkles, Square, Waves } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { getInfo, streamSynth, synthesize, type Info, type Language, type Metrics, type SynthRequest, type VoiceMode } from "./api";
-import { audioContext, concat, decode, encodeWav, engine, mono } from "./audio";
-import Editor, { type EditorHandle } from "./components/Editor";
-import { Header, Hero } from "./components/Header";
-import Output, { type HistoryItem, type RunState } from "./components/Output";
-import Settings, { DEFAULT_PARAMS, type Params } from "./components/Settings";
-import { Segmented } from "./components/ui";
-import Voices, { type RefClip } from "./components/Voices";
-import { stopPreview, useTheme, useToasts } from "./hooks";
+import { AlertCircle, CheckCircle2, History, Info as InfoIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  getInfo,
+  synthesize,
+  type Info,
+  type Language,
+  type Metrics,
+  type SynthRequest,
+  type VoiceMode,
+} from "./api";
+import { audioContext, engine, formatTime } from "./audio";
+import { LeftNav, type LeftNavTab } from "./components/LeftNav";
+import type { HistoryItem, RunState } from "./components/Output";
+import { PlaygroundHeader } from "./components/PlaygroundHeader";
+import { RightInspector } from "./components/RightInspector";
+import { DEFAULT_PARAMS, type Params } from "./components/Settings";
+import { VoiceStudioPlayground } from "./components/VoiceStudioPlayground";
+import type { RefClip } from "./components/Voices";
+import { stopPreview, useEngine, useFrame, useToasts } from "./hooks";
 
-type GenMode = "generate" | "stream";
+const DEFAULT_SCRIPT =
+  "النهارده الجو حلو أوي في إسكندرية، يلا نطلع نتمشى شوية على الكورنيش ونشرب قهوة سوا.";
 
-const FIRST_TEXT = "اتفقنا نعمل ال meeting بكرة الصبح، فياريت كل واحد يجهز ال presentation بتاعته.";
-const FIRST_TEXT_EN = "The meeting has been moved to Thursday at 3:30, so please update your calendars.";
+const SPEAKING_STYLES = ["Conversational", "Narrative", "Expressive", "Formal"];
+
+const DEFAULT_SPEAKERS = [
+  { speaker_id: "Mohammed", speaker_name: "Mohammed", arabic_name: "محمد", gender: "male", tags: ["طبيعي", "سرد"], reference_text: "", audio_url: "voices/Mohammed" },
+  { speaker_id: "Ahmed", speaker_name: "Ahmed", arabic_name: "أحمد", gender: "male", tags: ["شبابي", "حماسي"], reference_text: "", audio_url: "voices/Ahmed" },
+  { speaker_id: "Mariam", speaker_name: "Mariam", arabic_name: "مريم", gender: "female", tags: ["هادئ", "واضح"], reference_text: "", audio_url: "voices/Mariam" },
+  { speaker_id: "Sarah", speaker_name: "Sarah", arabic_name: "سارة", gender: "female", tags: ["تعبيري", "قصصي"], reference_text: "", audio_url: "voices/Sarah" },
+  { speaker_id: "Ali", speaker_name: "Ali", arabic_name: "علي", gender: "male", tags: ["إعلاني", "قوي"], reference_text: "", audio_url: "voices/Ali" },
+  { speaker_id: "Hassan", speaker_name: "Hassan", arabic_name: "حسن", gender: "male", tags: ["وقور", "عميق"], reference_text: "", audio_url: "voices/Hassan" },
+  { speaker_id: "Karim", speaker_name: "Karim", arabic_name: "كريم", gender: "male", tags: ["حوار", "ودود"], reference_text: "", audio_url: "voices/Karim" },
+  { speaker_id: "Mahmoud", speaker_name: "Mahmoud", arabic_name: "محمود", gender: "male", tags: ["رسمي", "واضح"], reference_text: "", audio_url: "voices/Mahmoud" },
+  { speaker_id: "Mostafa", speaker_name: "Mostafa", arabic_name: "مصطفى", gender: "male", tags: ["تفاعلي"], reference_text: "", audio_url: "voices/Mostafa" },
+  { speaker_id: "Ramy", speaker_name: "Ramy", arabic_name: "رامي", gender: "male", tags: ["عفوي", "عامي"], reference_text: "", audio_url: "voices/Ramy" },
+  { speaker_id: "Shaker", speaker_name: "Shaker", arabic_name: "شاكر", gender: "male", tags: ["إذاعي"], reference_text: "", audio_url: "voices/Shaker" },
+  { speaker_id: "Tareq", speaker_name: "Tareq", arabic_name: "طارق", gender: "male", tags: ["شاب"], reference_text: "", audio_url: "voices/Tareq" },
+  { speaker_id: "Yehia", speaker_name: "Yehia", arabic_name: "يحيى", gender: "male", tags: ["هادئ"], reference_text: "", audio_url: "voices/Yehia" },
+  { speaker_id: "Youssef", speaker_name: "Youssef", arabic_name: "يوسف", gender: "male", tags: ["حماسي"], reference_text: "", audio_url: "voices/Youssef" },
+  { speaker_id: "Hadeer", speaker_name: "Hadeer", arabic_name: "هدير", gender: "female", tags: ["عفوي", "بودكاست"], reference_text: "", audio_url: "voices/Hadeer" },
+  { speaker_id: "Hanan", speaker_name: "Hanan", arabic_name: "حنان", gender: "female", tags: ["سردي", "دافئ"], reference_text: "", audio_url: "voices/Hanan" },
+  { speaker_id: "Rana", speaker_name: "Rana", arabic_name: "رنا", gender: "female", tags: ["مرح", "إعلاني"], reference_text: "", audio_url: "voices/Rana" },
+  { speaker_id: "Yasmin", speaker_name: "Yasmin", arabic_name: "ياسمين", gender: "female", tags: ["ناعم", "احترافي"], reference_text: "", audio_url: "voices/Yasmin" },
+  { speaker_id: "Yara", speaker_name: "Yara", arabic_name: "يارا", gender: "female", tags: ["شابة", "حيوية"], reference_text: "", audio_url: "voices/Yara" },
+];
 
 function loadParams(): Params {
   try {
@@ -27,32 +58,48 @@ function loadParams(): Params {
 }
 
 export default function App() {
-  const [theme, toggleTheme] = useTheme();
   const { toasts, push } = useToasts();
+  const st = useEngine();
 
   const [info, setInfo] = useState<Info | null>(null);
-  const [offline, setOffline] = useState(false);
+  const [, setOffline] = useState(false);
 
-  const [text, setText] = useState(FIRST_TEXT);
-  const [language, setLanguage] = useState<Language>("arz");
+  // Panels State matching Figma 3-panel layout
+  const [leftNavCollapsed, setLeftNavCollapsed] = useState(() => {
+    if (typeof window !== "undefined") return window.innerWidth < 1100;
+    return false;
+  });
+  const [rightInspectorOpen, setRightInspectorOpen] = useState(() => {
+    if (typeof window !== "undefined") return window.innerWidth >= 1024;
+    return true;
+  });
+  const [rightInspectorVoiceExpanded, setRightInspectorVoiceExpanded] = useState(false);
+
+  const [activeLeftTab, setActiveLeftTab] = useState<LeftNavTab>("playground");
+
+  const [text, setText] = useState(DEFAULT_SCRIPT);
+  const [language] = useState<Language>("arz");
   const [voiceMode, setVoiceMode] = useState<VoiceMode>("speaker");
-  const [speaker, setSpeaker] = useState<string | null>(null);
+  const [speaker, setSpeaker] = useState<string | null>("Mohammed");
   const [clip, setClip] = useState<RefClip | null>(null);
   const [refText, setRefText] = useState("");
   const [params, setParams] = useState<Params>(loadParams);
-  const [genMode, setGenMode] = useState<GenMode>("generate");
+  const [speakingStyle, setSpeakingStyle] = useState("Conversational");
 
   const [run, setRun] = useState<RunState>("idle");
-  const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [currentId, setCurrentId] = useState<number | null>(null);
-  const [voiceLabel, setVoiceLabel] = useState("");
 
-  const abort = useRef<AbortController | null>(null);
-  const editor = useRef<EditorHandle>(null);
-  const editorWrap = useRef<HTMLDivElement>(null);
+  const [currentTime, setCurrentTime] = useState(0);
 
-  // ---- server info (retries while a Space is waking up)
+  // Continuous frame update for smooth waveform scrubbing & timing
+  useFrame(() => {
+    if (st.playing || st.mode === "ready" || st.mode === "streaming") {
+      setCurrentTime(engine.currentTime());
+    }
+  }, st.playing || st.mode === "ready" || st.mode === "streaming");
+
+  // Server info fetch
   useEffect(() => {
     let dead = false;
     let timer = 0;
@@ -62,7 +109,13 @@ export default function App() {
           if (dead) return;
           setInfo(i);
           setOffline(false);
-          setSpeaker((s) => s ?? i.speakers.find((x) => x.speaker_name === "Mohammed")?.speaker_id ?? i.speakers[0]?.speaker_id ?? null);
+          setSpeaker(
+            (s) =>
+              s ??
+              i.speakers.find((x) => x.speaker_name === "Mohammed")?.speaker_id ??
+              i.speakers[0]?.speaker_id ??
+              null,
+          );
         })
         .catch(() => {
           if (dead) return;
@@ -76,6 +129,7 @@ export default function App() {
     };
   }, []);
 
+  // Save params
   useEffect(() => {
     try {
       localStorage.setItem("voicetut-params", JSON.stringify(params));
@@ -84,11 +138,15 @@ export default function App() {
     }
   }, [params]);
 
-  // space bar = play / pause (outside text fields)
+  // Space bar play/pause
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
-      if (e.code !== "Space" || t.closest("textarea, input, button, [role=slider], [role=option], a")) return;
+      if (
+        e.code !== "Space" ||
+        t.closest("textarea, input, button, [role=slider], [role=option], a")
+      )
+        return;
       const mode = engine.getState().mode;
       if (mode !== "ready" && mode !== "streaming") return;
       e.preventDefault();
@@ -101,28 +159,50 @@ export default function App() {
   const busy = run === "busy";
   const maxChars = info?.max_chars ?? 3000;
 
-  const currentVoiceName = useCallback(() => {
-    if (voiceMode === "clone") return "صوتك";
-    return info?.speakers.find((s) => s.speaker_id === speaker)?.arabic_name ?? "";
-  }, [voiceMode, speaker, info]);
+  const availableSpeakers = info?.speakers && info.speakers.length > 0 ? info.speakers : DEFAULT_SPEAKERS;
+  const currentSpeakerObj = availableSpeakers.find((s) => s.speaker_id === speaker);
+  const activeVoiceName =
+    voiceMode === "clone"
+      ? clip?.name || "صوت مستنسخ"
+      : currentSpeakerObj?.arabic_name
+        ? `${currentSpeakerObj.arabic_name} (${currentSpeakerObj.speaker_name})`
+        : "محمد (Mohammed)";
+  const activeVoiceDetails =
+    voiceMode === "clone"
+      ? clip
+        ? `صوت مرجعي · ${formatTime(clip.duration)}`
+        : "اضغط لتسجيل أو رفع صوت مرجعي"
+      : `${currentSpeakerObj?.gender === "female" ? "مصرية · أنثى" : "مصري · ذكر"} · ${currentSpeakerObj?.tags?.join(" · ") || "طبيعي"}`;
 
-  const addHistory = (audio: ArrayBuffer, m: Metrics, duration: number, voice: string, t: string) => {
+  const addHistory = (
+    audio: ArrayBuffer,
+    m: Metrics,
+    duration: number,
+    voice: string,
+    t: string,
+  ) => {
     const id = Date.now();
-    setHistory((h) => [{ id, text: t, voice, duration, audio, metrics: m }, ...h].slice(0, 6));
+    setHistory((h) => [{ id, text: t, voice, duration, audio, metrics: m }, ...h].slice(0, 30));
     setCurrentId(id);
   };
 
-  const generate = async () => {
+  const handleGenerate = async () => {
     if (busy) return;
     const t = text.trim();
-    if (!t) return push("info", "اكتب النص الأول");
-    if (t.length > maxChars) return push("error", `النص أطول من ${maxChars} حرف`);
-    if (!info) return push("error", "السيرفر لسه مش جاهز، استنى ثواني");
-    if (voiceMode === "speaker" && !speaker) return push("info", "اختار صوت");
-    if (voiceMode === "clone" && !clip) return push("info", "ارفع أو سجّل صوت مرجعي الأول");
+    if (!t) return push("info", "من فضلك اكتب النص المراد توليده أولاً");
+    if (t.length > maxChars) return push("error", `النص يتجاوز الحد الأقصى (${maxChars} حرف)`);
+    if (!info) return push("error", "جاري الاتصال بالخادم، يرجى الانتظار ثوانٍ معدودة");
+    if (voiceMode === "speaker" && !speaker) return push("info", "يرجى اختيار صوت أولاً من السايد بار");
+    if (voiceMode === "clone" && !clip) {
+      setRightInspectorOpen(true);
+      setRightInspectorVoiceExpanded(true);
+      return push("info", "يرجى تسجيل أو رفع مقطع صوتي مرجعي في السايد بار للاستنساخ");
+    }
 
     stopPreview();
-    audioContext(); // unlock audio inside the click gesture
+    audioContext();
+
+    const voice = activeVoiceName;
     const req: SynthRequest = {
       text: t,
       language,
@@ -135,181 +215,190 @@ export default function App() {
       speed: params.speed,
       normalize: params.normalize,
     };
-    const voice = currentVoiceName();
+
     setRun("busy");
-    setMetrics(null);
-    setVoiceLabel(voice);
-
-    if (genMode === "generate") {
-      engine.setLoading();
-      try {
-        const { audio, metrics: m } = await synthesize(req);
-        await engine.load(audio);
-        setMetrics(m);
-        addHistory(audio, m, m.audio, voice, t);
-        setRun("ready");
-      } catch (e) {
-        engine.reset();
-        setRun("error");
-        push("error", (e as Error).message);
-      }
-      return;
-    }
-
-    // streaming
-    const ac = new AbortController();
-    abort.current = ac;
-    const parts: ArrayBuffer[] = [];
-    let last: Metrics | null = null;
     engine.setLoading();
+
     try {
-      let first = true;
-      for await (const { audio, metrics: m } of streamSynth(req, ac.signal)) {
-        if (first) {
-          engine.beginStream();
-          first = false;
-        }
-        parts.push(audio);
-        last = m;
-        setMetrics(m);
-        await engine.pushChunk(audio);
-      }
-      engine.endStream({ cancelled: ac.signal.aborted });
-      if (!parts.length) {
-        if (!ac.signal.aborted) throw new Error("مفيش صوت رجع من السيرفر");
-        engine.reset();
-        setRun("idle");
-        return;
-      }
-      setRun(ac.signal.aborted ? "idle" : "ready");
-      // keep a stitched copy in the history list
-      const decoded = await Promise.all(parts.map(decode));
-      const sr = decoded[0].sampleRate;
-      const all = concat(decoded.map(mono));
-      const wav = await encodeWav(all, sr).arrayBuffer();
-      addHistory(wav, last!, all.length / sr, voice, t);
+      const { audio, metrics: m } = await synthesize(req);
+      await engine.load(audio);
+      addHistory(audio, m, m.audio, voice, t);
+      setRun("ready");
+      push("ok", `تم توليد الصوت بنجاح في ${m.total.toFixed(2)} ثانية`);
     } catch (e) {
-      engine.endStream({ cancelled: true });
-      if (!parts.length) engine.reset();
+      engine.reset();
       setRun("error");
       push("error", (e as Error).message);
-    } finally {
-      abort.current = null;
     }
   };
 
-  const stop = () => {
-    abort.current?.abort();
-    engine.endStream({ cancelled: true });
-  };
-
-  const pick = async (h: HistoryItem) => {
-    stopPreview();
+  const handleSelectHistory = async (h: HistoryItem) => {
     setCurrentId(h.id);
-    setMetrics(h.metrics);
-    setVoiceLabel(h.voice);
-    setRun("ready");
+    setText(h.text);
     await engine.load(h.audio);
+    engine.play();
   };
 
-  const busyLabel = genMode === "stream" ? "بيجهّز أول جملة…" : "بيولّد الصوت…";
+  const handleNewSession = () => {
+    setText("");
+    engine.reset();
+    setCurrentTime(0);
+    push("info", "تم بدء جلسة جديدة ونظيفة");
+  };
+
+  const handleCycleSpeakingStyle = () => {
+    const nextIdx = (SPEAKING_STYLES.indexOf(speakingStyle) + 1) % SPEAKING_STYLES.length;
+    setSpeakingStyle(SPEAKING_STYLES[nextIdx]);
+  };
+
+  const handleExportAll = () => {
+    if (!history.length) return push("info", "لا توجد تسجيلات لتصديرها بعد");
+    history.forEach((h, idx) => {
+      const blob = new Blob([h.audio], { type: "audio/wav" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `voicetut_clip_${idx + 1}.wav`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+    push("ok", `تم تصدير ${history.length} مقطع صوتي بصيغة WAV`);
+  };
+
+  const handleOpenVoiceMode = (mode: VoiceMode = "speaker") => {
+    setVoiceMode(mode);
+    setRightInspectorOpen(true);
+    setRightInspectorVoiceExpanded(true);
+  };
+
+  const handleTogglePlay = () => {
+    if (st.mode === "ready" || st.mode === "streaming") {
+      engine.toggle();
+    } else if (text.trim() && !busy) {
+      void handleGenerate();
+    } else {
+      push("info", "اكتب نصاً واضغط على توليد لتشغيل الصوت");
+    }
+  };
 
   return (
-    <>
-      <div className="ambient" aria-hidden>
-        <i />
-        <i />
-      </div>
-      <div className="grain" aria-hidden />
+    <div className="figma-studio-layout">
+      {/* 1. Left Sidebar Navigation */}
+      <LeftNav
+        activeTab={activeLeftTab}
+        onSelectTab={setActiveLeftTab}
+        onOpenVoiceMode={handleOpenVoiceMode}
+        historyCount={history.length}
+        speakersCount={availableSpeakers.length}
+        collapsed={leftNavCollapsed}
+        onToggleCollapse={() => setLeftNavCollapsed((c) => !c)}
+        onNewSession={handleNewSession}
+        history={history}
+        currentId={currentId}
+        onSelectHistory={handleSelectHistory}
+        isPlaying={st.playing}
+        onTogglePlay={handleTogglePlay}
+        currentTime={currentTime}
+        duration={st.duration || 0}
+        onExportAll={handleExportAll}
+      />
 
-      <Header info={info} offline={offline} theme={theme} onTheme={toggleTheme} />
-      <div className="shell">
-        <Hero />
+      {/* 2. Center Workspace */}
+      <div className="figma-center-stage">
+        <PlaygroundHeader
+          leftNavCollapsed={leftNavCollapsed}
+          onToggleLeftNav={() => setLeftNavCollapsed((c) => !c)}
+          rightInspectorOpen={rightInspectorOpen}
+          onToggleRightInspector={() => setRightInspectorOpen((o) => !o)}
+          onClearSession={handleNewSession}
+          messagesCount={history.length}
+        />
 
-        <motion.div className="layout" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.25 }}>
-          <main className="col" ref={editorWrap} style={{ scrollMarginTop: 90 }}>
-            <Editor
-              ref={editor}
-              text={text}
-              onText={setText}
-              language={language}
-              onLanguage={setLanguage}
-              maxChars={maxChars}
-              examples={language === "en" ? info?.examples_en ?? [FIRST_TEXT_EN] : info?.examples ?? [FIRST_TEXT]}
-              onSubmit={generate}
-              onToast={push}
-            />
-
-            <div className="card gen-bar">
-              <Segmented
-                label="طريقة التوليد"
-                value={genMode}
-                onChange={setGenMode}
-                options={[
-                  { value: "generate", label: "توليد", icon: <Sparkles size={15} /> },
-                  { value: "stream", label: "بث مباشر", icon: <Waves size={15} /> },
-                ]}
-              />
-              <span className="grow" />
-              <AnimatePresence mode="wait" initial={false}>
-                {busy && genMode === "stream" ? (
-                  <motion.button key="stop" className="btn" onClick={stop} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
-                    <Square size={14} fill="currentColor" />
-                    وقّف
-                  </motion.button>
-                ) : null}
-              </AnimatePresence>
-              <motion.button className={`btn-primary${busy ? " busy" : ""}`} onClick={generate} disabled={busy || !info} whileTap={{ scale: 0.98 }}>
-                <span className="shine" />
-                {busy ? <span className="spinner" /> : genMode === "stream" ? <Waves size={19} /> : <Sparkles size={19} />}
-                {busy ? (genMode === "stream" ? "بيبث…" : "بيولّد…") : genMode === "stream" ? "ابدأ البث" : "ولّد الصوت"}
-              </motion.button>
+        {activeLeftTab === "history" ? (
+          <div className="studio-history-view">
+            <div className="studio-history-head">
+              <div className="history-head-title">
+                <History size={18} />
+                <h2>History ({history.length})</h2>
+              </div>
+              <p>سجل المقاطع والتسجيلات المولدة في هذه الجلسة</p>
             </div>
-
-            <Output
-              run={run}
-              busyLabel={busyLabel}
-              metrics={metrics}
-              voiceLabel={voiceLabel}
-              history={history}
-              currentId={currentId}
-              onPick={pick}
-            />
-          </main>
-
-          <aside className="col side">
-            <Voices
-              speakers={info?.speakers ?? []}
-              mode={voiceMode}
-              onMode={setVoiceMode}
-              speaker={speaker}
-              onSpeaker={setSpeaker}
-              clip={clip}
-              onClip={setClip}
-              refText={refText}
-              onRefText={setRefText}
-              onToast={push}
-            />
-            <Settings value={params} onChange={setParams} />
-          </aside>
-        </motion.div>
-
-        <footer className="footer">
-          <span>
-            VoiceTut-TTS <span className="ltr">v1{info ? ` · ${info.version}` : ""}</span>
-          </span>
-          <a href="https://huggingface.co/mohammedaly22/VoiceTut-TTS" target="_blank" rel="noopener">
-            الموديل على HuggingFace
-          </a>
-          <a href="https://github.com/MohammedAly22/VoiceTuT-TTS" target="_blank" rel="noopener">
-            GitHub
-          </a>
-          <a href="https://pypi.org/project/voicetut-tts/" target="_blank" rel="noopener">
-            PyPI
-          </a>
-        </footer>
+            {history.length === 0 ? (
+              <div className="empty-history-box">
+                <History size={32} />
+                <p>لا توجد تسجيلات مولدة حتى الآن</p>
+                <small>ستظهر جميع التسجيلات الصوتية تلقائياً فور توليدها</small>
+              </div>
+            ) : (
+              <div className="history-cards-grid">
+                {history.map((h) => (
+                  <div
+                    key={h.id}
+                    className={`history-card-item ${h.id === currentId ? "active" : ""}`}
+                    onClick={() => handleSelectHistory(h)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className="card-top">
+                      <span className="voice-badge">{h.voice}</span>
+                      <span className="dur num">{formatTime(h.duration)}</span>
+                    </div>
+                    <p className="card-text" dir="auto">
+                      {h.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <VoiceStudioPlayground
+            text={text}
+            onTextChange={setText}
+            voiceName={activeVoiceName}
+            voiceDetails={activeVoiceDetails}
+            speakingStyle={speakingStyle}
+            onCycleSpeakingStyle={handleCycleSpeakingStyle}
+            modelName="VoiceTut-TTS v1"
+            onOpenVoicePicker={handleOpenVoiceMode}
+            busy={busy}
+            onGenerate={handleGenerate}
+            isPlaying={st.playing}
+            onTogglePlay={handleTogglePlay}
+            currentTime={currentTime}
+            duration={st.duration || 0}
+            onSeek={(frac) => engine.seek(frac)}
+            maxChars={maxChars}
+          />
+        )}
       </div>
 
+      {/* 3. Right Inspector Surface — Inline Voice Management, NO POPUPS! */}
+      <RightInspector
+        open={rightInspectorOpen}
+        onClose={() => setRightInspectorOpen(false)}
+        info={info}
+        params={params}
+        onChangeParams={setParams}
+        voiceMode={voiceMode}
+        onVoiceMode={setVoiceMode}
+        speaker={speaker}
+        onSpeaker={setSpeaker}
+        speakers={availableSpeakers}
+        clip={clip}
+        onClip={setClip}
+        refText={refText}
+        onRefText={setRefText}
+        speakingStyle={speakingStyle}
+        onChangeSpeakingStyle={setSpeakingStyle}
+        onGenerate={handleGenerate}
+        busy={busy}
+        onToast={push}
+        voiceExpanded={rightInspectorVoiceExpanded}
+        onToggleVoiceExpanded={() => setRightInspectorVoiceExpanded((e) => !e)}
+      />
+
+      {/* Toast Notifications */}
       <div className="toasts" aria-live="polite">
         <AnimatePresence>
           {toasts.map((t) => (
@@ -321,12 +410,18 @@ export default function App() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.96 }}
             >
-              {t.kind === "error" ? <AlertCircle size={17} /> : t.kind === "ok" ? <CheckCircle2 size={17} /> : <InfoIcon size={17} />}
+              {t.kind === "error" ? (
+                <AlertCircle size={17} />
+              ) : t.kind === "ok" ? (
+                <CheckCircle2 size={17} />
+              ) : (
+                <InfoIcon size={17} />
+              )}
               <span>{t.text}</span>
             </motion.div>
           ))}
         </AnimatePresence>
       </div>
-    </>
+    </div>
   );
 }

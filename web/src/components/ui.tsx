@@ -59,15 +59,19 @@ export function Slider({
   const frac = (value - min) / (max - min);
 
   const fromX = (clientX: number) => {
-    const r = ref.current!.getBoundingClientRect();
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
     const f = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
     const raw = min + f * (max - min);
-    const snapped = Math.round(raw / step) * step;
-    onChange(+Math.max(min, Math.min(max, snapped)).toFixed(4));
+    const stepsCount = Math.round((raw - min) / step);
+    const snapped = min + stepsCount * step;
+    const clamped = Math.max(min, Math.min(max, snapped));
+    const precision = (step.toString().split(".")[1] || "").length;
+    onChange(Number(clamped.toFixed(precision)));
   };
 
   const down = (e: PointerEvent) => {
-    (e.target as Element).setPointerCapture?.(e.pointerId);
+    ref.current?.setPointerCapture?.(e.pointerId);
     setDrag(true);
     fromX(e.clientX);
   };
@@ -81,7 +85,8 @@ export function Slider({
     else if (k === "End") v = max;
     else return;
     e.preventDefault();
-    onChange(+Math.max(min, Math.min(max, v)).toFixed(4));
+    const precision = (step.toString().split(".")[1] || "").length;
+    onChange(Number(Math.max(min, Math.min(max, v)).toFixed(precision)));
   };
 
   return (
@@ -111,8 +116,8 @@ export function Slider({
 export function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <button className="switch" role="switch" aria-checked={checked} aria-label={label} onClick={() => onChange(!checked)}>
-      {/* RTL: off = knob at the start (right), on = knob at the end (left) */}
-      <motion.span className="knob" animate={{ left: checked ? 2 : 20 }} transition={spring} />
+      {/* Off = knob at start (left: 2px), On = knob at end (left: 20px) */}
+      <motion.span className="knob" animate={{ left: checked ? 20 : 2 }} transition={spring} />
     </button>
   );
 }
