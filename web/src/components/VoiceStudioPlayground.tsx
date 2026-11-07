@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Cpu,
+  Download,
   Gauge,
   Globe,
   Loader2,
@@ -38,6 +39,8 @@ export interface VoiceStudioPlaygroundProps {
   maxChars?: number;
   speed?: number;
   numStep?: number;
+  onDownload?: () => void;
+  hasAudio?: boolean;
 }
 
 const WAVEFORM_BARS = [
@@ -76,6 +79,8 @@ export function VoiceStudioPlayground({
   maxChars = 3000,
   speed = 1.0,
   numStep = 16,
+  onDownload,
+  hasAudio = false,
 }: VoiceStudioPlaygroundProps) {
   const waveformRef = useRef<HTMLDivElement>(null);
   const toolStripRef = useRef<HTMLDivElement>(null);
@@ -303,6 +308,25 @@ export function VoiceStudioPlayground({
                   <span>{formatTime(currentTime)}</span>
                   <span>{displayDuration > 0 ? formatTime(displayDuration) : "0:00"}</span>
                 </div>
+              </div>
+
+              {/* Right: Download Generated Audio Button */}
+              <div className="figma-stage-right">
+                <button
+                  type="button"
+                  className="figma-stage-download-btn"
+                  onClick={onDownload}
+                  disabled={!hasAudio || displayDuration <= 0}
+                  title={
+                    hasAudio && displayDuration > 0
+                      ? "Download generated speech audio (WAV)"
+                      : "Synthesize speech first to download"
+                  }
+                  aria-label="Download audio WAV"
+                >
+                  <Download size={14} />
+                  <span>Download WAV</span>
+                </button>
               </div>
             </div>
 

@@ -4860,6 +4860,40 @@ svg {
   color: var(--text-muted);
 }
 
+.figma-stage-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.figma-stage-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  background: var(--bg-control-default);
+  border: 1px solid var(--border-interactive);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.figma-stage-download-btn:hover:not(:disabled) {
+  background: var(--bg-control-hover);
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.figma-stage-download-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: var(--border-subtle);
+}
+
 /* 2x2 Compact Metric Grid Pattern */
 .figma-metric-grid-2x2 {
   display: grid;
@@ -5548,29 +5582,51 @@ svg {
 /* 5.8 Segmented Folder Tabs, Callout Tips & Keyboard Badges */
 .figma-folder-tabs {
   display: flex;
-  align-items: center;
-  border-bottom: 1px solid #393939;
-  margin-bottom: 12px;
+  align-items: stretch;
+  background: var(--bg-surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 3px;
+  margin-bottom: 14px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .figma-folder-tab {
-  padding: 8px 16px;
-  background: #2A2A2A;
-  border: 1px solid #393939;
-  border-bottom: none;
-  color: #A0A0A0;
-  border-radius: 6px 6px 0 0;
-  font-size: 12px;
-  margin-right: 4px;
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.figma-folder-tab:hover:not(.active) {
+  background: var(--bg-interactive-subtle);
+  color: var(--text-secondary);
 }
 
 .figma-folder-tab.active {
-  background: #393939;
-  color: #C6C6C6;
+  background: var(--bg-control-default);
+  border-color: var(--border-interactive);
+  color: var(--text-primary);
   font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 .figma-tab-content-box {

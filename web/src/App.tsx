@@ -277,6 +277,22 @@ export default function App() {
     push("ok", `Exported ${history.length} audio clips as WAV files`);
   };
 
+  const handleDownloadLatest = () => {
+    const latest = history.find((h) => h.id === currentId) || history[0];
+    if (!latest) {
+      push("info", "No audio generated yet to download");
+      return;
+    }
+    const blob = new Blob([latest.audio], { type: "audio/wav" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `voicetut_${latest.voice.split(" ")[0].toLowerCase()}_${latest.id}.wav`;
+    a.click();
+    URL.revokeObjectURL(url);
+    push("ok", `Downloaded "${latest.text.slice(0, 20)}…" (WAV)`);
+  };
+
   const handleNewSession = () => {
     engine.reset();
     setText("");
@@ -404,6 +420,8 @@ export default function App() {
             maxChars={maxChars}
             speed={params.speed}
             numStep={params.numStep}
+            onDownload={handleDownloadLatest}
+            hasAudio={history.length > 0 || st.duration > 0}
           />
         )}
       </div>
