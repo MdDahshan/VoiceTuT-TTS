@@ -1,0 +1,102 @@
+/* -------------------------------- Modals -------------------------------- */
+.studio-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: 20px;
+}
+
+.studio-modal-box {
+  width: 100%;
+  max-width: 580px;
+  max-height: 85vh;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.studio-modal-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title-group {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.modal-title-group b {
+  font-size: 15px;
+  color: var(--text);
+}
+
+.modal-title-group small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.studio-modal-body {
+  padding: 16px 20px 24px;
+  overflow-y: auto;
+}
+
+.studio-modal-box.code-modal {
+  max-width: 680px;
+}
+
+.code-lang-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.code-lang-selector button {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.code-lang-selector button.active {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.copy-code-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.studio-code-preview {
+  margin: 0;
+  padding: 18px 20px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+

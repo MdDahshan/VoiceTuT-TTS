@@ -1,0 +1,178 @@
+/* Compact two-line player: voice/download above, playback controls below. */
+.figma-preview-stage-container {
+  padding: 12px;
+}
+
+.figma-stage-area {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-height: 0;
+  gap: 0;
+  padding: 0;
+  margin: 0 0 10px;
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.figma-stage-header {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 2px 2px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.figma-stage-mark {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--text-secondary);
+  background: var(--bg-control-default);
+  border: 1px solid var(--border-interactive);
+  border-radius: 10px;
+}
+
+.figma-stage-mark svg {
+  width: 25px;
+  height: 25px;
+}
+
+.figma-stage-meta {
+  min-width: 0;
+}
+
+.figma-stage-name {
+  display: block;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.figma-stage-sub {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.figma-stage-download-btn {
+  min-height: 38px;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.figma-player-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 14px 2px 2px;
+}
+
+.figma-stage-play-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+}
+
+.figma-stage-center {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.figma-player-row .figma-stage-center {
+  grid-column: auto;
+  grid-row: auto;
+}
+
+.figma-stage-time {
+  min-width: 32px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.figma-stage-time:last-child {
+  text-align: right;
+}
+
+.figma-stage-waveform {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 4px 0;
+  gap: 3px;
+}
+
+.figma-stage-waveform-bar {
+  min-width: 0;
+  border-radius: 3px;
+}
+
+.figma-metric-grid-2x2 {
+  margin-top: 0;
+}
+
+@media (max-width: 600px) {
+  .figma-preview-stage-container {
+    padding: 10px;
+  }
+
+  .figma-stage-header {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 10px;
+    padding-bottom: 12px;
+  }
+
+  .figma-stage-mark {
+    width: 38px;
+    height: 38px;
+  }
+
+  .figma-stage-mark svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .figma-stage-header .figma-stage-download-btn {
+    grid-column: 2;
+    justify-self: start;
+    min-height: 34px;
+    padding: 6px 10px;
+  }
+
+  .figma-player-row {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 9px;
+    padding-top: 12px;
+  }
+
+  .figma-stage-play-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .figma-stage-center {
+    gap: 6px;
+  }
+
+  .figma-stage-time {
+    min-width: 27px;
+    font-size: 10px;
+  }
+
+  .figma-stage-waveform {
+    gap: 2px;
+  }
+}

@@ -38,7 +38,6 @@ export interface LeftNavProps {
   duration?: number;
   onExportAll?: () => void;
   onOpenShortcuts?: () => void;
-  onOpenProfile?: () => void;
 }
 
 const SESSION_BARS = [
@@ -63,7 +62,6 @@ export function LeftNav({
   duration = 0,
   onExportAll,
   onOpenShortcuts,
-  onOpenProfile,
 }: LeftNavProps) {
   const currentClip = history.find((h) => h.id === currentId) || history[0];
   const activeClipTitle = currentClip
@@ -128,7 +126,7 @@ export function LeftNav({
       <div className="figma-nav-scroll">
         {/* EXPLORE section */}
         <div className="figma-nav-section">
-          {!collapsed && <div className="figma-nav-label">EXPLORE</div>}
+          <div className="figma-nav-label">EXPLORE</div>
           <button
             type="button"
             className={`figma-nav-item ${activeTab === "playground" ? "active" : ""}`}
@@ -138,12 +136,8 @@ export function LeftNav({
             <div className="figma-nav-icon-wrap">
               <Compass size={16} />
             </div>
-            {!collapsed && (
-              <>
-                <span className="figma-nav-text">Playground</span>
-                <ChevronRight className="figma-nav-item-chevron" size={16} />
-              </>
-            )}
+            <span className="figma-nav-text">Playground</span>
+            <ChevronRight className="figma-nav-item-chevron" size={16} />
           </button>
 
           <button
@@ -155,13 +149,9 @@ export function LeftNav({
             <div className="figma-nav-icon-wrap">
               <Users size={16} />
             </div>
-            {!collapsed && (
-              <>
-                <span className="figma-nav-text">Voice Library</span>
-                <span className="figma-nav-badge">{speakersCount}</span>
-                <ChevronRight className="figma-nav-item-chevron" size={16} />
-              </>
-            )}
+            <span className="figma-nav-text">Voice Library</span>
+            <span className="figma-nav-badge">{speakersCount}</span>
+            <ChevronRight className="figma-nav-item-chevron" size={16} />
           </button>
 
           <button
@@ -173,12 +163,8 @@ export function LeftNav({
             <div className="figma-nav-icon-wrap">
               <Wand2 size={16} />
             </div>
-            {!collapsed && (
-              <>
-                <span className="figma-nav-text">Voice Clone</span>
-                <ChevronRight className="figma-nav-item-chevron" size={16} />
-              </>
-            )}
+            <span className="figma-nav-text">Voice Clone</span>
+            <ChevronRight className="figma-nav-item-chevron" size={16} />
           </button>
 
           <button
@@ -190,13 +176,9 @@ export function LeftNav({
             <div className="figma-nav-icon-wrap">
               <History size={16} />
             </div>
-            {!collapsed && (
-              <>
-                <span className="figma-nav-text">Recordings</span>
-                {historyCount > 0 && <span className="figma-nav-badge">{historyCount}</span>}
-                <ChevronRight className="figma-nav-item-chevron" size={16} />
-              </>
-            )}
+            <span className="figma-nav-text">Recordings</span>
+            {historyCount > 0 && <span className="figma-nav-badge">{historyCount}</span>}
+            <ChevronRight className="figma-nav-item-chevron" size={16} />
           </button>
         </div>
 
@@ -310,20 +292,6 @@ export function LeftNav({
                 <Keyboard size={16} />
               </button>
             )}
-            <button
-              type="button"
-              className="figma-sidebar-utility-btn"
-              onClick={onOpenProfile}
-              title="Account & Workspace Settings"
-              aria-label="Account Settings"
-            >
-              <div
-                className="figma-account-avatar"
-                style={{ width: 24, height: 24, fontSize: 10, margin: "0 auto" }}
-              >
-                <span>VP</span>
-              </div>
-            </button>
           </div>
         ) : (
           <div className="figma-sidebar-bottom-stack">
@@ -376,19 +344,6 @@ export function LeftNav({
               </button>
             </div>
 
-            {/* 3. Account / Profile Switcher Pill */}
-            <button
-              type="button"
-              className="figma-account-switcher-pill"
-              onClick={onOpenProfile}
-              title="Account & Workspace Settings"
-            >
-              <div className="figma-account-avatar">
-                <span>VP</span>
-              </div>
-              <span className="figma-account-identifier">producer@voicetut.ai</span>
-              <span className="figma-tier-badge">PRO</span>
-            </button>
           </div>
         )}
       </div>

@@ -1,0 +1,193 @@
+/* =========================================================================
+   Sticky Bottom Action / Composer Bar (padding: 12px 24px 20px;)
+   ========================================================================= */
+.figma-composer-dock {
+  padding: 12px 24px 20px;
+  background: transparent;
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+.figma-composer-container {
+  max-width: 900px;
+  margin: 0 auto;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.figma-composer-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.figma-composer-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.figma-composer-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.figma-composer-textarea {
+  min-height: 48px;
+  max-height: 210px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.figma-composer-textarea::placeholder {
+  color: var(--text-faint);
+}
+
+.figma-composer-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.figma-composer-left-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.figma-composer-right-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.figma-composer-status-chip {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--bg-surface-card);
+  border: 1px solid var(--border-subtle);
+  font-size: 11px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.figma-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.figma-composer-tool-strip {
+  background: var(--bg-surface-card);
+  border-radius: 999px;
+  padding: 2px 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  max-width: calc(100% - 140px);
+}
+
+.figma-filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--bg-control-default);
+  border: 1px solid var(--border-subtle);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.figma-filter-chip-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.figma-filter-chip-close:hover {
+  color: var(--text-primary);
+}
+
+.figma-secondary-chip {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.figma-secondary-chip:hover {
+  background: var(--bg-interactive-subtle);
+  color: var(--text-secondary);
+}
+
+.figma-primary-cta {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--bg-control-default);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border-interactive);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.figma-primary-cta:hover:not(:disabled) {
+  background: var(--bg-control-hover);
+  color: #FFFFFF;
+}
+
+.figma-primary-cta:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.figma-primary-cta:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+

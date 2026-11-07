@@ -1,0 +1,81 @@
+/* =========================================================================
+   High-Density Dark Studio Design System & Layout Architecture (3-Pane Shell)
+   ========================================================================= */
+
+/* 5.9 Thin Scrollbar & Micro-Animations */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #696969 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #696969;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #808080;
+}
+
+/* 4. Full-Viewport 3-Pane Desktop Layout */
+.figma-studio-layout {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-app-canvas);
+  color: var(--text-secondary);
+  font-family: var(--font-primary);
+  font-size: 13px;
+  line-height: 1.4;
+  position: relative;
+  direction: ltr;
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+}
+
+.figma-asset-icon {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Borderless Icon Buttons */
+.figma-icon-btn {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  padding: 6px;
+  transition: all 0.15s ease;
+}
+
+.figma-icon-btn:hover {
+  background: var(--bg-interactive-subtle);
+  color: var(--text-primary);
+}
+
+.figma-icon-btn.sm {
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+}
+
+.figma-icon-btn.active {
+  background: var(--bg-control-default);
+  color: var(--text-primary);
+}
+

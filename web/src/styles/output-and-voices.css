@@ -1,0 +1,237 @@
+/* =========================================================================
+   output
+   ========================================================================= */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--muted);
+  padding: 4px 11px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.status[data-s="busy"] .dot {
+  background: var(--accent);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.status[data-s="ready"] .dot {
+  background: var(--success);
+}
+
+.status[data-s="error"] .dot {
+  background: var(--danger);
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+    transform: scale(0.75);
+  }
+}
+
+.wave {
+  position: relative;
+  margin: 14px 14px 0;
+  height: 148px;
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 140% at 50% 0%, var(--accent-soft), transparent 60%),
+    var(--surface-2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.wave canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.wave.seekable canvas {
+  cursor: pointer;
+}
+
+.wave-msg {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.wave-msg span {
+  padding: 6px 14px;
+  border-radius: 99px;
+  background: var(--glass);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+}
+
+.wave-tip {
+  position: absolute;
+  top: 8px;
+  padding: 2px 8px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  color: var(--surface);
+  background: var(--text);
+  transform: translateX(-50%);
+  pointer-events: none;
+  direction: ltr;
+}
+
+.player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+}
+
+.play {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: var(--shadow-accent);
+  transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
+}
+
+.play:hover:not(:disabled) {
+  transform: scale(1.06);
+}
+
+.play:disabled {
+  opacity: 0.4;
+  box-shadow: none;
+}
+
+.time {
+  font-size: 13px;
+  color: var(--text-2);
+  direction: ltr;
+}
+
+.time .sep {
+  color: var(--muted);
+  margin: 0 5px;
+}
+
+.player .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.now-voice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0 14px 14px;
+}
+
+.metric {
+  padding: 12px 12px 10px;
+  border-radius: 15px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.metric dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.metric dd {
+  margin: 4px 0 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  direction: ltr;
+  text-align: right;
+}
+
+.metric dd small {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-inline-start: 3px;
+}
+
+.history {
+  border-top: 1px solid var(--border);
+  padding: 12px 14px 14px;
+}
+
+.history ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history li button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  text-align: start;
+  transition: background 0.18s;
+}
+
+.history li button:hover,
+.history li button[aria-current="true"] {
+  background: var(--surface-3);
+}
+
+.history .h-ico {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.history .h-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.history .h-meta {
+  font-size: 11.5px;
+  color: var(--muted);
+  direction: ltr;
+}
+

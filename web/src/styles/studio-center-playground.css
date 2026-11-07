@@ -1,0 +1,274 @@
+/* -------------------------------- Center Playground -------------------------------- */
+.studio-center-stage {
+  flex: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.playground-topbar {
+  height: 52px;
+  min-height: 52px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: var(--bg);
+  z-index: 10;
+}
+
+.topbar-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+}
+
+.nav-expand-trigger {
+  margin-inline-end: 4px;
+}
+
+.crumb-main {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.crumb-sep {
+  color: var(--muted);
+}
+
+.crumb-sub {
+  color: var(--muted);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-studio-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-studio-action:hover {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.btn-studio-action.run-settings-trigger.active {
+  background: var(--surface-3);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.studio-canvas-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 28px 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* -------------------------------- Google Hero Visuals -------------------------------- */
+.studio-hero-section {
+  max-width: 800px;
+  margin: 40px auto 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.studio-hero-title h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: var(--text);
+  letter-spacing: -0.4px;
+}
+
+.studio-hero-title p {
+  font-size: 14.5px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.studio-prompts-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prompts-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.prompts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prompt-try-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  text-align: inherit;
+  transition: all 0.15s ease;
+}
+
+.prompt-try-card:hover {
+  background: var(--surface-2);
+  border-color: var(--accent);
+  transform: translateX(-2px);
+}
+
+.prompt-bullet {
+  color: var(--accent);
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.prompt-txt {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.prompt-try-card:hover .prompt-txt {
+  color: var(--text);
+}
+
+/* History View */
+.studio-history-view {
+  max-width: 840px;
+  margin: 20px auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 20px 200px;
+}
+
+.studio-history-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history-head-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+}
+
+.history-head-title h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.studio-history-head p {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.empty-history-box {
+  text-align: center;
+  padding: 60px 20px;
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.empty-history-box p {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin: 0;
+}
+
+.history-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-card-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.18s ease;
+}
+
+.history-card-item:hover,
+.history-card-item.active {
+  border-color: var(--accent);
+  background: var(--surface-2);
+  transform: translateY(-1px);
+}
+
+.history-card-item .card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.history-card-item .voice-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-text);
+  background: var(--accent-soft);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.history-card-item .dur {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.history-card-item .card-text {
+  font-size: 14px;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.5;
+}
+

@@ -1,0 +1,58 @@
+/* -------------------------------- Responsive Breakpoints -------------------------------- */
+@media (max-width: 1024px) {
+  .agent-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 340px;
+    min-width: 340px;
+    transform: translateX(100%);
+    margin-inline-start: 0 !important;
+  }
+
+  .agent-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .agent-sidebar.collapsed {
+    transform: translateX(100%);
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 39;
+  }
+}
+
+@media (max-width: 760px) {
+  .hero-suggestions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .prompt-controls-row {
+    gap: 6px;
+  }
+
+  .agent-scroll-viewport {
+    padding: 16px 14px 230px;
+  }
+
+  .agent-prompt-wrapper {
+    padding: 0 12px 14px;
+  }
+
+  .top-device {
+    display: none;
+  }
+}
+
+

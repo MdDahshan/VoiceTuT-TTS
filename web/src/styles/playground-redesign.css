@@ -1,0 +1,499 @@
+/* Playground layout and type refinements. Palette is inherited unchanged. */
+.figma-center-stage {
+  min-width: 0;
+  min-height: 0;
+}
+
+.figma-canvas-scroll {
+  padding: 28px clamp(20px, 3.2vw, 40px) 24px;
+  overscroll-behavior: contain;
+}
+
+.figma-canvas-inner {
+  width: 100%;
+  max-width: 1040px;
+  gap: 0;
+}
+
+.figma-showcase-header {
+  margin-bottom: 0;
+}
+
+.figma-showcase-title {
+  max-width: 760px;
+  font-size: clamp(24px, 2vw, 29px);
+  line-height: 1.28;
+  letter-spacing: -0.015em;
+}
+
+.figma-showcase-sub {
+  max-width: 760px;
+  margin: 8px 0 18px;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.figma-quick-starters-row {
+  gap: 8px;
+}
+
+.figma-starter-pill {
+  min-height: 36px;
+  padding: 8px 13px;
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+
+.figma-showcase-grid {
+  gap: 14px;
+  margin: 22px 0 20px;
+}
+
+.figma-tile-card {
+  min-width: 0;
+  border-radius: 12px;
+}
+
+.figma-tile-media {
+  aspect-ratio: 1.9 / 1;
+}
+
+.figma-tile-footer {
+  min-height: 46px;
+  padding: 10px 12px;
+}
+
+.figma-tile-title {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.figma-tile-badge {
+  min-height: 26px;
+  padding: 4px 9px;
+  white-space: nowrap;
+}
+
+.figma-preview-stage-container {
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 0;
+}
+
+.figma-stage-area {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 1.4fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 86px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}
+
+.figma-stage-left {
+  min-width: 0;
+  gap: 12px;
+}
+
+.figma-stage-play-btn {
+  width: 40px;
+  height: 40px;
+}
+
+.figma-stage-meta {
+  min-width: 0;
+}
+
+.figma-stage-name {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.figma-stage-sub {
+  margin-top: 3px;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.figma-stage-center {
+  gap: 7px;
+}
+
+.figma-stage-waveform {
+  height: 38px;
+  gap: 3px;
+}
+
+.figma-stage-waveform-bar {
+  border-radius: 2px;
+}
+
+.figma-stage-time-row {
+  font-size: 11px;
+}
+
+.figma-stage-download-btn {
+  min-height: 36px;
+  padding: 8px 12px;
+}
+
+.figma-metric-grid-2x2 {
+  gap: 8px;
+}
+
+.figma-metric-tile {
+  min-width: 0;
+  min-height: 48px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  gap: 10px;
+}
+
+.figma-metric-data {
+  min-width: 0;
+}
+
+.figma-metric-label {
+  font-size: 9px;
+  letter-spacing: 0.45px;
+  line-height: 1.4;
+}
+
+.figma-metric-val {
+  max-width: 100%;
+  font-size: 12.5px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.figma-composer-dock {
+  padding: 12px clamp(20px, 3.2vw, 40px) 20px;
+}
+
+.figma-composer-container {
+  max-width: 1040px;
+  padding: 14px 16px;
+  gap: 12px;
+  border-radius: 12px;
+}
+
+.figma-composer-label,
+.figma-composer-meta {
+  font-size: 11.5px;
+}
+
+.figma-composer-label {
+  letter-spacing: 0.35px;
+}
+
+.figma-composer-textarea {
+  min-height: 56px;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.figma-composer-bottom-bar {
+  gap: 12px;
+}
+
+.figma-composer-left-group,
+.figma-composer-right-group {
+  min-width: 0;
+}
+
+.figma-composer-status-chip,
+.figma-secondary-chip {
+  min-height: 32px;
+}
+
+.figma-primary-cta {
+  min-height: 38px;
+  padding: 8px 15px;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--text-on-accent);
+  box-shadow: none;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.figma-primary-cta:hover:not(:disabled) {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: var(--text-on-accent);
+}
+
+.figma-primary-cta:disabled {
+  opacity: 0.48;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-on-accent);
+}
+
+/* Keep every primary action consistent with the solid synthesize action. */
+.btn-primary,
+.figma-btn-primary {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--text-on-accent);
+  box-shadow: none;
+  filter: none;
+}
+
+.btn-primary:hover:not(:disabled),
+.figma-btn-primary:hover {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: var(--text-on-accent);
+  box-shadow: none;
+  filter: none;
+}
+
+.figma-tile-card:focus-visible,
+.figma-stage-waveform:focus-visible,
+.figma-starter-pill:focus-visible {
+  outline-offset: 3px;
+}
+
+/* Unified high-contrast playback controls and waveform. */
+.figma-stage-area {
+  grid-template-columns: minmax(190px, 0.9fr) minmax(180px, 1.5fr) auto;
+  gap: 20px;
+  min-height: 92px;
+  padding: 16px 18px;
+  background: var(--bg-surface-primary);
+  box-shadow: none;
+}
+
+.figma-stage-play-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: var(--bg-control-default);
+  border: 1px solid var(--border-interactive);
+  color: var(--text-primary);
+}
+
+.figma-stage-play-btn:hover {
+  background: var(--bg-control-hover);
+  color: #FFFFFF;
+}
+
+.figma-stage-waveform {
+  height: 42px;
+  gap: 3px;
+  padding: 4px 0;
+}
+
+.figma-stage-waveform-bar {
+  min-width: 2px;
+  background: var(--text-faint);
+  border-radius: 3px;
+  transition: background 0.15s ease, opacity 0.15s ease, height 0.15s ease;
+}
+
+.figma-stage-waveform-bar.played {
+  background: #C6C6C6;
+}
+
+.figma-stage-time-row {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.figma-stage-download-btn {
+  min-height: 38px;
+  border-radius: 8px;
+}
+
+.figma-metric-grid-2x2 {
+  grid-template-columns: repeat(4, minmax(148px, 1fr));
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.figma-metric-tile {
+  min-width: 0;
+  min-height: 52px;
+  padding: 8px 10px;
+  gap: 8px;
+}
+
+.figma-metric-label {
+  font-size: 8.5px;
+  letter-spacing: 0.25px;
+}
+
+.figma-metric-val {
+  font-size: 12px;
+}
+
+@media (max-width: 980px) {
+  .figma-showcase-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .figma-stage-area {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  }
+
+  .figma-stage-right {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 760px) {
+  .figma-canvas-scroll {
+    padding: 22px 18px 20px;
+  }
+
+  .figma-showcase-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .figma-tile-media {
+    aspect-ratio: 1.65 / 1;
+  }
+
+  .figma-stage-area {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 13px;
+  }
+
+  .figma-stage-center {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .figma-stage-right {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .figma-metric-grid-2x2 {
+    grid-template-columns: repeat(4, minmax(148px, 1fr));
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .figma-composer-dock {
+    padding: 10px 14px 14px;
+  }
+
+  .figma-composer-bottom-bar {
+    flex-wrap: wrap;
+  }
+
+  .figma-composer-left-group {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .figma-canvas-scroll {
+    padding: 20px 14px 16px;
+  }
+
+  .figma-showcase-title {
+    font-size: 22px;
+    line-height: 1.35;
+  }
+
+  .figma-showcase-sub {
+    margin-bottom: 16px;
+    font-size: 13.5px;
+  }
+
+  .figma-quick-starters-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .figma-starter-pill {
+    justify-content: flex-start;
+  }
+
+  .figma-showcase-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .figma-tile-media {
+    aspect-ratio: 2.3 / 1;
+  }
+
+  .figma-stage-area {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .figma-stage-center {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .figma-stage-right {
+    grid-column: 1;
+    grid-row: 3;
+    justify-content: stretch;
+  }
+
+  .figma-stage-download-btn {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .figma-stage-area {
+    gap: 12px;
+  }
+
+  .figma-metric-grid-2x2 {
+    grid-template-columns: repeat(4, minmax(148px, 1fr));
+  }
+
+  .figma-composer-dock {
+    padding: 8px 10px 10px;
+  }
+
+  .figma-composer-container {
+    padding: 12px;
+  }
+
+  .figma-composer-bottom-bar {
+    align-items: stretch;
+  }
+
+  .figma-composer-left-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .figma-composer-status-chip {
+    max-width: none;
+    flex: 0 0 auto;
+  }
+
+  .figma-composer-tool-strip {
+    order: 1;
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .figma-composer-tool-strip .figma-filter-chip {
+    flex-shrink: 0;
+  }
+
+  .figma-composer-right-group,
+  .figma-primary-cta {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -101,8 +101,6 @@ export function RightInspector({
 
   useEffect(() => () => recorderRef.current?.stop(), []);
 
-  if (!open) return null;
-
   const currentSpeaker = speakers.find((s) => s.speaker_id === speaker);
   const voiceName =
     voiceMode === "clone"
@@ -254,7 +252,7 @@ export function RightInspector({
   };
 
   return (
-    <aside className="figma-inspector">
+    <aside className={`figma-inspector ${open ? "open" : "closed"}`} aria-hidden={!open}>
       {/* Sticky Drawer Header (height: 56px, Section 4.3) */}
       <div className="figma-inspector-head">
         <span className="figma-inspector-title">

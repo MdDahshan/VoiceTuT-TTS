@@ -2,7 +2,6 @@ import React, { useRef } from "react";
 import { formatTime } from "../audio";
 import {
   ArrowUpRight,
-  BookOpen,
   ChevronLeft,
   ChevronRight,
   Cpu,
@@ -10,8 +9,6 @@ import {
   Gauge,
   Globe,
   Loader2,
-  MessageSquare,
-  Mic,
   Pause,
   Play,
   PlusCircle,
@@ -38,7 +35,6 @@ export interface VoiceStudioPlaygroundProps {
   onTogglePlay: () => void;
   currentTime: number;
   duration: number;
-  onSeek: (frac: number) => void;
   maxChars?: number;
   speed?: number;
   numStep?: number;
@@ -78,26 +74,17 @@ export function VoiceStudioPlayground({
   onTogglePlay,
   currentTime,
   duration,
-  onSeek,
   maxChars = 3000,
   speed = 1.0,
   numStep = 16,
   onDownload,
   hasAudio = false,
 }: VoiceStudioPlaygroundProps) {
-  const waveformRef = useRef<HTMLDivElement>(null);
   const toolStripRef = useRef<HTMLDivElement>(null);
 
   const displayDuration = duration > 0 ? duration : 0;
   const progressFrac = displayDuration > 0 ? Math.min(1, currentTime / displayDuration) : 0;
   const activeWaveformIndex = Math.floor(progressFrac * WAVEFORM_BARS.length);
-
-  const handleWaveformClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!waveformRef.current || displayDuration <= 0) return;
-    const rect = waveformRef.current.getBoundingClientRect();
-    const frac = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    onSeek(frac);
-  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
@@ -130,36 +117,6 @@ export function VoiceStudioPlayground({
               and zero-shot voice cloning.
             </p>
 
-            {/* Horizontal row of 3 interactive Quick-Starter Pill Buttons */}
-            <div className="figma-quick-starters-row">
-              <button
-                type="button"
-                className="figma-starter-pill"
-                onClick={() => onTextChange(SAMPLE_SCRIPTS.narration)}
-                title="Load Commercial & Promo Script"
-              >
-                <Mic size={13} />
-                <span>Commercial & Voiceover</span>
-              </button>
-              <button
-                type="button"
-                className="figma-starter-pill"
-                onClick={() => onTextChange(SAMPLE_SCRIPTS.audiobook)}
-                title="Load Narrative Audiobook Script"
-              >
-                <BookOpen size={13} />
-                <span>Audiobook & Story</span>
-              </button>
-              <button
-                type="button"
-                className="figma-starter-pill"
-                onClick={() => onTextChange(SAMPLE_SCRIPTS.conversational)}
-                title="Load Colloquial Dialogue Script"
-              >
-                <MessageSquare size={13} />
-                <span>Colloquial Dialogue</span>
-              </button>
-            </div>
           </div>
 
           {/* 3-Column Showcase Grid */}
@@ -255,24 +212,15 @@ export function VoiceStudioPlayground({
             </div>
           </div>
 
-          {/* 5.6 Live Preview Stage & 2x2 Metric Grid Pattern */}
+          {/* Audio player and synthesis metrics */}
           <div className="figma-preview-stage-container">
-            {/* Stage Area */}
             <div className="figma-stage-area">
-              <div className="figma-stage-left">
-                <button
-                  type="button"
-                  className="figma-stage-play-btn"
-                  onClick={onTogglePlay}
-                  title={isPlaying ? "Pause audio (Space)" : "Play generated audio (Space)"}
-                  aria-label={isPlaying ? "Pause" : "Play"}
-                >
-                  {isPlaying ? (
-                    <Pause size={14} fill="currentColor" />
-                  ) : (
-                    <Play size={14} fill="currentColor" />
-                  )}
-                </button>
+              <div className="figma-stage-header">
+                <div className="figma-stage-mark" aria-hidden="true">
+                  <svg viewBox="0 0 32 32" fill="none">
+                    <path d="M5 13v6M10 9v14M15 4v24M20 10v12M25 13v6" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                  </svg>
+                </div>
                 <div className="figma-stage-meta">
                   <span
                     className="figma-stage-name"
@@ -284,55 +232,45 @@ export function VoiceStudioPlayground({
                   </span>
                   <span className="figma-stage-sub">{voiceDetails}</span>
                 </div>
-              </div>
-
-              {/* Scrubber & Waveform */}
-              <div className="figma-stage-center">
-                <div
-                  className="figma-stage-waveform"
-                  ref={waveformRef}
-                  onClick={handleWaveformClick}
-                  role="slider"
-                  aria-valuenow={Math.round(progressFrac * 100)}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  tabIndex={0}
-                  title="Click anywhere to scrub playback position"
-                >
-                  {WAVEFORM_BARS.map((h, i) => {
-                    const isPlayed = displayDuration > 0 && i <= activeWaveformIndex;
-                    return (
-                      <div
-                        key={i}
-                        className={`figma-stage-waveform-bar ${isPlayed ? "played" : ""}`}
-                        style={{ height: `${h}px` }}
-                      />
-                    );
-                  })}
-                </div>
-                <div className="figma-stage-time-row">
-                  <span>{formatTime(currentTime)}</span>
-                  <span>{displayDuration > 0 ? formatTime(displayDuration) : "0:00"}</span>
-                </div>
-              </div>
-
-              {/* Right: Download Generated Audio Button */}
-              <div className="figma-stage-right">
                 <button
                   type="button"
                   className="figma-stage-download-btn"
                   onClick={onDownload}
                   disabled={!hasAudio || displayDuration <= 0}
-                  title={
-                    hasAudio && displayDuration > 0
-                      ? "Download generated speech audio (WAV)"
-                      : "Synthesize speech first to download"
-                  }
+                  title={hasAudio && displayDuration > 0 ? "Download generated speech audio (WAV)" : "Synthesize speech first to download"}
                   aria-label="Download audio WAV"
                 >
                   <Download size={14} />
                   <span>Download WAV</span>
                 </button>
+              </div>
+
+              <div className="figma-player-row">
+                <button
+                  type="button"
+                  className="figma-stage-play-btn"
+                  onClick={onTogglePlay}
+                  title={isPlaying ? "Pause audio (Space)" : "Play generated audio (Space)"}
+                  aria-label={isPlaying ? "Pause" : "Play"}
+                >
+                  {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+                </button>
+                <div className="figma-stage-center">
+                  <span className="figma-stage-time">{formatTime(currentTime)}</span>
+                  <div className="figma-stage-waveform" role="img" aria-label={`Audio waveform, ${formatTime(displayDuration)} total duration`}>
+                    {WAVEFORM_BARS.map((h, i) => {
+                      const isPlayed = displayDuration > 0 && i <= activeWaveformIndex;
+                      return (
+                        <div
+                          key={i}
+                          className={`figma-stage-waveform-bar ${isPlayed ? "played" : ""}`}
+                          style={{ height: `${h}px` }}
+                        />
+                      );
+                    })}
+                  </div>
+                  <span className="figma-stage-time">{displayDuration > 0 ? formatTime(displayDuration) : "0:00"}</span>
+                </div>
               </div>
             </div>
 

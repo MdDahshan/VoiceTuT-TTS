@@ -1,0 +1,184 @@
+/* Smooth, coordinated motion for the persistent left and right sidebars. */
+.figma-sidebar {
+  visibility: visible;
+  transition:
+    width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    min-width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    max-width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms ease;
+}
+
+.figma-sidebar.collapsed {
+  width: 0;
+  min-width: 0;
+  max-width: 0;
+  padding: 0;
+  border-right-width: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    min-width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    max-width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms ease,
+    opacity 220ms ease,
+    visibility 0s linear 360ms;
+}
+
+.figma-sidebar-reopen {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 36px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  opacity: 0;
+  animation: sidebar-reopen-enter 220ms ease 180ms forwards;
+  transition: color 150ms ease, background 150ms ease, border-color 150ms ease;
+}
+
+.figma-sidebar-reopen:hover {
+  color: var(--text-primary);
+  background: transparent;
+  border-color: transparent;
+}
+
+@keyframes sidebar-reopen-enter {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.figma-sidebar .figma-nav-label {
+  max-height: 32px;
+  overflow: hidden;
+  transition:
+    max-height 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 180ms ease;
+}
+
+.figma-sidebar .figma-nav-item {
+  gap: 12px;
+  transition:
+    width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    gap 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    margin 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.figma-sidebar .figma-nav-text,
+.figma-sidebar .figma-nav-item-chevron,
+.figma-sidebar .figma-nav-badge {
+  max-width: 150px;
+  overflow: hidden;
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    max-width 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 160ms ease,
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    margin 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.figma-sidebar.collapsed .figma-nav-label {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+}
+
+.figma-sidebar.collapsed .figma-nav-item {
+  gap: 0;
+}
+
+.figma-sidebar.collapsed .figma-nav-text,
+.figma-sidebar.collapsed .figma-nav-item-chevron,
+.figma-sidebar.collapsed .figma-nav-badge {
+  max-width: 0;
+  margin: 0;
+  opacity: 0;
+  transform: translateX(-6px);
+  pointer-events: none;
+}
+
+.figma-inspector {
+  flex-basis: 320px;
+  position: relative;
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  transition:
+    width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    min-width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    max-width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    flex-basis 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease,
+    border-color 220ms ease,
+    visibility 0s linear 0s;
+}
+
+.figma-inspector.closed {
+  width: 0;
+  min-width: 0;
+  max-width: 0;
+  flex-basis: 0;
+  border-left-width: 0;
+  transform: translateX(14px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    min-width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    max-width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    flex-basis 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease,
+    border-color 220ms ease,
+    visibility 0s linear 360ms;
+}
+
+@media (max-width: 900px) {
+  .figma-inspector {
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 40;
+    width: min(320px, calc(100vw - 24px));
+    min-width: min(320px, calc(100vw - 24px));
+    max-width: min(320px, calc(100vw - 24px));
+    flex-basis: min(320px, calc(100vw - 24px));
+  }
+
+  .figma-inspector.closed {
+    width: 0;
+    min-width: 0;
+    max-width: 0;
+    flex-basis: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .figma-sidebar,
+  .figma-sidebar *,
+  .figma-inspector {
+    transition-duration: 0.01ms !important;
+  }
+
+  .figma-sidebar-reopen {
+    animation: none;
+    opacity: 1;
+  }
+}

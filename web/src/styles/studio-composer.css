@@ -1,0 +1,195 @@
+/* =========================================================================
+   5.6 Live Preview Stage & 2x2 Metric Grid Pattern
+   ========================================================================= */
+.figma-preview-stage-container {
+  background: var(--bg-surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 10px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.figma-stage-area {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 6px;
+  padding: 16px;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-inset-well);
+  margin-bottom: 8px;
+  gap: 16px;
+}
+
+.figma-stage-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 180px;
+}
+
+.figma-stage-play-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--bg-control-default);
+  border: 1px solid var(--border-interactive);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  flex-shrink: 0;
+}
+
+.figma-stage-play-btn:hover {
+  background: var(--bg-control-hover);
+  color: #FFFFFF;
+}
+
+.figma-stage-play-btn:active {
+  transform: scale(0.96);
+}
+
+.figma-stage-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.figma-stage-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.figma-stage-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.figma-stage-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.figma-stage-waveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 36px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.figma-stage-waveform-bar {
+  flex: 1;
+  background: #393939;
+  border-radius: 1px;
+  transition: height 0.15s ease, background 0.12s ease;
+}
+
+.figma-stage-waveform-bar.played {
+  background: #C6C6C6;
+}
+
+.figma-stage-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.figma-stage-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.figma-stage-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  background: var(--bg-control-default);
+  border: 1px solid var(--border-interactive);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.figma-stage-download-btn:hover:not(:disabled) {
+  background: var(--bg-control-hover);
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.figma-stage-download-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: var(--border-subtle);
+}
+
+/* 2x2 Compact Metric Grid Pattern */
+.figma-metric-grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.figma-metric-tile {
+  background: var(--bg-control-default);
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-interactive);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.figma-metric-icon {
+  font-size: 14px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.figma-metric-data {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.figma-metric-label {
+  font-size: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.figma-metric-val {
+  font-size: 12px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
