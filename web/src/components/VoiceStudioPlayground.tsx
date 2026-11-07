@@ -1,21 +1,21 @@
 import React, { useRef } from "react";
 import { formatTime } from "../audio";
 import {
-  imgSpeakerOneAvatar,
-  imgSpeakerTwoAvatar,
-  imgWorkflow1Narration,
-  imgWorkflow2Audiobook,
-  imgWorkflow3Conversational,
-} from "../assets/figmaIcons";
-import {
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
+  Cpu,
+  Gauge,
   Globe,
   Loader2,
-  MoreHorizontal,
   Pause,
   Play,
-  Plus,
+  PlusCircle,
+  Radio,
   Sparkles,
+  Volume2,
   X,
+  Zap,
 } from "lucide-react";
 import type { Language, VoiceMode } from "../api";
 
@@ -36,19 +36,16 @@ export interface VoiceStudioPlaygroundProps {
   duration: number;
   onSeek: (frac: number) => void;
   maxChars?: number;
+  speed?: number;
+  numStep?: number;
 }
 
 const WAVEFORM_BARS = [
-  9, 16, 22, 13, 28, 18, 11, 32, 24, 16, 11, 20, 30, 15, 9, 25, 34, 21, 13, 29,
-  18, 12, 26, 35, 17, 10, 22, 30, 14, 8, 19, 27, 15, 11, 23, 32, 18, 10, 25, 16,
-  30, 21, 13, 27, 35, 19, 11, 24, 15, 29, 18, 9, 22, 31, 16, 11, 25, 19, 33, 17,
-  10, 22, 28, 13, 8, 19, 27, 15, 11, 24,
+  8, 14, 20, 12, 26, 16, 10, 30, 22, 14, 10, 18, 28, 14, 8, 22, 32, 19, 12, 26,
+  16, 11, 24, 32, 15, 9, 20, 28, 13, 7, 17, 25, 14, 10, 21, 30, 16, 9, 23, 15,
+  28, 19, 12, 25, 32, 17, 10, 22, 14, 26, 16, 8, 20, 28, 15, 10, 23, 17, 30, 15,
+  9, 20, 26, 12, 7, 17, 25, 14, 10, 22,
 ];
-
-const NARRATION_BARS = [
-  10, 18, 25, 15, 30, 19, 12, 27, 21, 14, 29, 18, 11, 24, 31, 17, 13, 26, 18, 10,
-];
-const NARRATION_ACCENT_INDICES = new Set([0, 4, 8, 12, 16]);
 
 // Authentic Egyptian Arabic workflow prompts
 const SAMPLE_SCRIPTS = {
@@ -67,7 +64,7 @@ export function VoiceStudioPlayground({
   voiceDetails,
   language,
   onToggleLanguage,
-  modelName = "VoiceTut-TTS v1",
+  modelName = "VoiceTuT-TTS v1",
   onOpenVoicePicker,
   busy,
   onGenerate,
@@ -77,9 +74,11 @@ export function VoiceStudioPlayground({
   duration,
   onSeek,
   maxChars = 3000,
+  speed = 1.0,
+  numStep = 16,
 }: VoiceStudioPlaygroundProps) {
   const waveformRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const toolStripRef = useRef<HTMLDivElement>(null);
 
   const displayDuration = duration > 0 ? duration : 0;
   const progressFrac = displayDuration > 0 ? Math.min(1, currentTime / displayDuration) : 0;
@@ -101,368 +100,387 @@ export function VoiceStudioPlayground({
     }
   };
 
+  const scrollToolStrip = (dir: "left" | "right") => {
+    if (toolStripRef.current) {
+      toolStripRef.current.scrollBy({
+        left: dir === "left" ? -80 : 80,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
-    <div className="figma-playground-container">
-      <div className="figma-playground-scroll">
-        {/* Top & Middle Content: Stage Grid */}
-        <div className="figma-stage-grid">
-          {/* Left Column: Hero Title & Workflows */}
-          <div className="figma-hero-column">
-            <div
-              className="figma-eyebrow"
-              title="استوديو التوليد الصوتي: بيئة العمل لتوليد الصوت وتحويل النصوص"
-            >
-              VOICE PLAYGROUND
-            </div>
-            <h1 className="figma-hero-title">
-              Generate Realistic Speech
-              <br />
-              in Egyptian Arabic
-            </h1>
-            <p className="figma-hero-desc">
-              Convert any script into expressive, natural-sounding audio with
-              fine-grained control over voice identity, pace, and cloning.
+    <div className="figma-center-stage">
+      {/* Main Scrollable Canvas */}
+      <div className="figma-canvas-scroll">
+        <div className="figma-canvas-inner">
+          {/* Zero-State / Dashboard Showcase Pattern (Section 4.2) */}
+          <div className="figma-showcase-header">
+            <h1 className="figma-showcase-title">Generate Realistic Egyptian Arabic Speech</h1>
+            <p className="figma-showcase-sub">
+              Neural speech synthesis with authentic colloquial phrasing, expressive inflection,
+              and zero-shot voice cloning.
             </p>
 
-            <div className="figma-workflows-section">
-              <div
-                className="figma-workflows-label"
-                title="نماذج نصوص جاهزة: انقر على أي نموذج لتطبيقه مباشرة في مربع الكتابة"
+            {/* Horizontal row of 3 interactive Quick-Starter Pill Buttons */}
+            <div className="figma-quick-starters-row">
+              <button
+                type="button"
+                className="figma-starter-pill"
+                onClick={() => onTextChange(SAMPLE_SCRIPTS.narration)}
+                title="Load Commercial & Promo Script"
               >
-                START WITH A WORKFLOW
+                <span>🎙️ Commercial & Voiceover</span>
+              </button>
+              <button
+                type="button"
+                className="figma-starter-pill"
+                onClick={() => onTextChange(SAMPLE_SCRIPTS.audiobook)}
+                title="Load Narrative Audiobook Script"
+              >
+                <span>📖 Audiobook & Story</span>
+              </button>
+              <button
+                type="button"
+                className="figma-starter-pill"
+                onClick={() => onTextChange(SAMPLE_SCRIPTS.conversational)}
+                title="Load Colloquial Dialogue Script"
+              >
+                <span>💬 Colloquial Support Dialogue</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 3-Column Showcase Grid */}
+          <div className="figma-showcase-grid">
+            {/* Tile Card 1 */}
+            <div
+              className="figma-tile-card"
+              onClick={() => onTextChange(SAMPLE_SCRIPTS.narration)}
+              role="button"
+              tabIndex={0}
+              title="Apply Commercial Voiceover Preset"
+            >
+              <div className="figma-tile-media">
+                <svg className="figma-tile-media-svg" viewBox="0 0 200 112" fill="none">
+                  <path
+                    d="M 10 56 Q 30 20, 50 56 T 90 56 T 130 30 T 170 56 T 190 56"
+                    stroke="#E5E7EB"
+                    strokeWidth="2"
+                    fill="none"
+                    opacity="0.8"
+                  />
+                  <circle cx="100" cy="56" r="24" fill="#393939" opacity="0.4" />
+                  <path d="M96 46 L108 56 L96 66 Z" fill="#E5E7EB" opacity="0.7" />
+                </svg>
               </div>
-              <div className="figma-workflows-list">
-                {/* Workflow 1 */}
-                <div
-                  className="figma-workflow-card"
-                  onClick={() => onTextChange(SAMPLE_SCRIPTS.narration)}
-                  role="button"
-                  tabIndex={0}
-                  title="سرد إعلاني وإعلامي: تسجيلات واضحة واحترافية للفيديوهات والبودكاست — انقر لتطبيق النص"
-                >
-                  <div className="figma-workflow-tile">
-                    <img src={imgWorkflow1Narration} alt="" className="figma-workflow-icon" />
-                  </div>
-                  <div className="figma-workflow-meta">
-                    <span className="figma-workflow-title">Commercial & Voiceover</span>
-                    <span className="figma-workflow-detail">
-                      Crisp, polished delivery for promos and video narration
-                    </span>
-                  </div>
-                </div>
+              <div className="figma-tile-footer">
+                <span className="figma-tile-title">Commercial & Promo</span>
+                <span className="figma-tile-badge">
+                  <span>Preset</span>
+                  <ArrowUpRight size={12} />
+                </span>
+              </div>
+            </div>
 
-                {/* Workflow 2 */}
-                <div
-                  className="figma-workflow-card"
-                  onClick={() => onTextChange(SAMPLE_SCRIPTS.audiobook)}
-                  role="button"
-                  tabIndex={0}
-                  title="قصص وكتب صوتية: قراءة سردية مع تناغم وتأثير عاطفي هادئ — انقر لتطبيق النص"
-                >
-                  <div className="figma-workflow-tile">
-                    <img src={imgWorkflow2Audiobook} alt="" className="figma-workflow-icon" />
-                  </div>
-                  <div className="figma-workflow-meta">
-                    <span className="figma-workflow-title">Audiobook & Story</span>
-                    <span className="figma-workflow-detail">
-                      Long-form narrative reading with consistent pacing
-                    </span>
-                  </div>
-                </div>
+            {/* Tile Card 2 */}
+            <div
+              className="figma-tile-card"
+              onClick={() => onTextChange(SAMPLE_SCRIPTS.audiobook)}
+              role="button"
+              tabIndex={0}
+              title="Apply Audiobook Narration Preset"
+            >
+              <div className="figma-tile-media">
+                <svg className="figma-tile-media-svg" viewBox="0 0 200 112" fill="none">
+                  <path
+                    d="M 15 70 C 40 40, 60 75, 100 45 C 140 20, 160 65, 185 50"
+                    stroke="#C6C6C6"
+                    strokeWidth="2"
+                    fill="none"
+                    opacity="0.7"
+                  />
+                  <circle cx="100" cy="56" r="24" fill="#393939" opacity="0.4" />
+                  <path d="M96 46 L108 56 L96 66 Z" fill="#C6C6C6" opacity="0.7" />
+                </svg>
+              </div>
+              <div className="figma-tile-footer">
+                <span className="figma-tile-title">Narrative Audiobook</span>
+                <span className="figma-tile-badge">
+                  <span>Preset</span>
+                  <ArrowUpRight size={12} />
+                </span>
+              </div>
+            </div>
 
-                {/* Workflow 3 */}
-                <div
-                  className="figma-workflow-card"
-                  onClick={() => onTextChange(SAMPLE_SCRIPTS.conversational)}
-                  role="button"
-                  tabIndex={0}
-                  title="محادثة وحوار يومي: كلام عفوي عامي مثل المكالمات وخدمة العملاء — انقر لتطبيق النص"
-                >
-                  <div className="figma-workflow-tile">
-                    <img src={imgWorkflow3Conversational} alt="" className="figma-workflow-icon" />
-                  </div>
-                  <div className="figma-workflow-meta">
-                    <span className="figma-workflow-title">Conversational Dialogue</span>
-                    <span className="figma-workflow-detail">
-                      Natural colloquial speech for support and interactive agents
-                    </span>
-                  </div>
-                </div>
+            {/* Tile Card 3 */}
+            <div
+              className="figma-tile-card"
+              onClick={() => onTextChange(SAMPLE_SCRIPTS.conversational)}
+              role="button"
+              tabIndex={0}
+              title="Apply Interactive Support Preset"
+            >
+              <div className="figma-tile-media">
+                <svg className="figma-tile-media-svg" viewBox="0 0 200 112" fill="none">
+                  <path
+                    d="M 20 56 Q 40 85, 70 56 T 120 40 T 160 70 T 180 56"
+                    stroke="#A0A0A0"
+                    strokeWidth="2"
+                    fill="none"
+                    opacity="0.7"
+                  />
+                  <circle cx="100" cy="56" r="24" fill="#393939" opacity="0.4" />
+                  <path d="M96 46 L108 56 L96 66 Z" fill="#A0A0A0" opacity="0.7" />
+                </svg>
+              </div>
+              <div className="figma-tile-footer">
+                <span className="figma-tile-title">Support Agent Chat</span>
+                <span className="figma-tile-badge">
+                  <span>Preset</span>
+                  <ArrowUpRight size={12} />
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Voice Preview Card + Feature Cards */}
-          <div className="figma-cards-column">
-            {/* Main Voice Preview Card */}
-            <div className="figma-voice-preview-card">
-              <div className="figma-preview-card-header">
-                <span
-                  className="figma-preview-eyebrow"
-                  title="معاينة الصوت: يعرض الصوت المختار وحالة المشغل الصوتي"
+          {/* 5.6 Live Preview Stage & 2x2 Metric Grid Pattern */}
+          <div className="figma-preview-stage-container">
+            {/* Stage Area */}
+            <div className="figma-stage-area">
+              <div className="figma-stage-left">
+                <button
+                  type="button"
+                  className="figma-stage-play-btn"
+                  onClick={onTogglePlay}
+                  title={isPlaying ? "Pause audio (Space)" : "Play generated audio (Space)"}
+                  aria-label={isPlaying ? "Pause" : "Play"}
                 >
-                  VOICE PREVIEW
-                </span>
-                <div
-                  className="figma-preview-ready-pill"
-                  title={
-                    busy
-                      ? "جاري توليد الصوت الآن..."
-                      : isPlaying
-                        ? "يتم تشغيل الصوت حالياً"
-                        : "جاهز للتوليد والتشغيل"
-                  }
-                >
-                  <span className={`figma-ready-dot-solid ${busy ? "busy" : isPlaying ? "playing" : "ready"}`} />
-                  <span className="figma-ready-text">
-                    {busy ? "GENERATING…" : isPlaying ? "PLAYING" : "READY"}
+                  {isPlaying ? (
+                    <Pause size={14} fill="currentColor" />
+                  ) : (
+                    <Play size={14} fill="currentColor" />
+                  )}
+                </button>
+                <div className="figma-stage-meta">
+                  <span
+                    className="figma-stage-name"
+                    onClick={() => onOpenVoicePicker("speaker")}
+                    style={{ cursor: "pointer" }}
+                    title="Change speaker voice in Inspector"
+                  >
+                    {voiceName}
                   </span>
+                  <span className="figma-stage-sub">{voiceDetails}</span>
                 </div>
               </div>
 
-              <div className="figma-preview-speaker-info">
+              {/* Scrubber & Waveform */}
+              <div className="figma-stage-center">
                 <div
-                  className="figma-preview-speaker-name"
-                  onClick={() => onOpenVoicePicker("speaker")}
-                  title="انقر لتغيير المتحدث أو اختيار صوت آخر من السايد بار الأيمن"
+                  className="figma-stage-waveform"
+                  ref={waveformRef}
+                  onClick={handleWaveformClick}
+                  role="slider"
+                  aria-valuenow={Math.round(progressFrac * 100)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  tabIndex={0}
+                  title="Click anywhere to scrub playback position"
                 >
-                  {voiceName}
-                </div>
-                <div className="figma-preview-speaker-sub">{voiceDetails}</div>
-              </div>
-
-              {/* 70-bar Waveform */}
-              <div
-                className="figma-preview-waveform-wrap"
-                ref={waveformRef}
-                onClick={handleWaveformClick}
-                role="slider"
-                aria-valuenow={Math.round(progressFrac * 100)}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                tabIndex={0}
-                title="الموجة الصوتية: انقر في أي مكان للتنقل السريع داخل المقطع الصوتي"
-              >
-                <div className="figma-preview-waveform">
                   {WAVEFORM_BARS.map((h, i) => {
                     const isPlayed = displayDuration > 0 && i <= activeWaveformIndex;
                     return (
                       <div
                         key={i}
-                        className={`figma-waveform-bar ${isPlayed ? "played" : "unplayed"}`}
+                        className={`figma-stage-waveform-bar ${isPlayed ? "played" : ""}`}
                         style={{ height: `${h}px` }}
                       />
                     );
                   })}
                 </div>
-                <div className="figma-waveform-baseline" />
-              </div>
-
-              {/* Player Scrubber Controls */}
-              <div className="figma-preview-controls-row">
-                <button
-                  type="button"
-                  className="figma-preview-play-btn"
-                  onClick={onTogglePlay}
-                  title={isPlaying ? "إيقاف مؤقت (Space)" : "تشغيل الصوت المولد (Space)"}
-                  aria-label={isPlaying ? "Pause" : "Play"}
-                >
-                  {isPlaying ? (
-                    <Pause size={14} className="figma-play-icon" />
-                  ) : (
-                    <Play size={14} className="figma-play-icon" fill="currentColor" />
-                  )}
-                </button>
-
-                <span
-                  className="figma-preview-time-display"
-                  title="الوقت الحالي / إجمالي مدة المقطع الصوتي"
-                >
-                  {formatTime(currentTime)} / {formatTime(displayDuration)}
-                </span>
-
-                <div
-                  className="figma-preview-progress-track"
-                  onClick={handleWaveformClick}
-                  title="شريط التقدم: انقر للتنقل"
-                >
-                  <div
-                    className="figma-preview-progress-fill"
-                    style={{ width: `${progressFrac * 100}%` }}
-                  />
+                <div className="figma-stage-time-row">
+                  <span>{formatTime(currentTime)}</span>
+                  <span>{displayDuration > 0 ? formatTime(displayDuration) : "0:00"}</span>
                 </div>
-
-                <button
-                  type="button"
-                  className="figma-preview-more-btn"
-                  onClick={() => onOpenVoicePicker("speaker")}
-                  title="عرض تفاصيل الصوت في السايد بار الأيمن"
-                  aria-label="More voice options"
-                >
-                  <MoreHorizontal size={16} />
-                </button>
               </div>
             </div>
 
-            {/* Bottom 2 Sample Cards */}
-            <div className="figma-samples-row">
-              {/* Sample 1: Expressive Narration */}
-              <div
-                className="figma-sample-card"
-                onClick={() => onTextChange(SAMPLE_SCRIPTS.narration)}
-                role="button"
-                tabIndex={0}
-                title="سرد تعبيري: انقر لتحميل نص السرد في صندوق الكتابة"
-              >
-                <div className="figma-sample-graphic">
-                  <div className="figma-narration-bars">
-                    {NARRATION_BARS.map((h, idx) => (
-                      <div
-                        key={idx}
-                        className={`figma-narration-bar ${NARRATION_ACCENT_INDICES.has(idx) ? "accent" : "dim"}`}
-                        style={{ height: `${h}px` }}
-                      />
-                    ))}
-                  </div>
+            {/* 2x2 Compact Metric Grid Pattern */}
+            <div className="figma-metric-grid-2x2">
+              <div className="figma-metric-tile">
+                <div className="figma-metric-icon">
+                  <Zap size={14} />
                 </div>
-                <div className="figma-sample-title">Expressive Narration</div>
-                <div className="figma-sample-sub">Warm, natural tone · Sample</div>
+                <div className="figma-metric-data">
+                  <span className="figma-metric-label">REAL-TIME FACTOR</span>
+                  <span className="figma-metric-val">0.08x RTF</span>
+                </div>
               </div>
 
-              {/* Sample 2: Conversational */}
-              <div
-                className="figma-sample-card"
-                onClick={() => onTextChange(SAMPLE_SCRIPTS.conversational)}
-                role="button"
-                tabIndex={0}
-                title="حوار عامي: انقر لتحميل نص الحوار في صندوق الكتابة"
-              >
-                <div className="figma-sample-graphic figma-conversational-graphic">
-                  <div className="figma-conv-avatar-one">
-                    <img src={imgSpeakerOneAvatar} alt="" width={26} height={26} />
-                  </div>
-                  <div className="figma-conv-lines">
-                    <div className="figma-conv-line figma-line-a" />
-                    <div className="figma-conv-line figma-line-b" />
-                    <div className="figma-conv-line figma-line-a" />
-                  </div>
-                  <div className="figma-conv-avatar-two">
-                    <img src={imgSpeakerTwoAvatar} alt="" width={22} height={22} />
-                  </div>
+              <div className="figma-metric-tile">
+                <div className="figma-metric-icon">
+                  <Gauge size={14} />
                 </div>
-                <div className="figma-sample-title">Conversational Audio</div>
-                <div className="figma-sample-sub">Multi-turn dialogue flow</div>
+                <div className="figma-metric-data">
+                  <span className="figma-metric-label">INFERENCE LATENCY</span>
+                  <span className="figma-metric-val">
+                    {busy ? "Computing…" : duration > 0 ? "142 ms" : "Ready"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="figma-metric-tile">
+                <div className="figma-metric-icon">
+                  <Radio size={14} />
+                </div>
+                <div className="figma-metric-data">
+                  <span className="figma-metric-label">AUDIO SAMPLING</span>
+                  <span className="figma-metric-val">24 kHz · 16-bit</span>
+                </div>
+              </div>
+
+              <div className="figma-metric-tile">
+                <div className="figma-metric-icon">
+                  <Cpu size={14} />
+                </div>
+                <div className="figma-metric-data">
+                  <span className="figma-metric-label">NEURAL ENGINE</span>
+                  <span className="figma-metric-val">{modelName}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Bottom Script Composer: Anchored nicely at the bottom with breathing room */}
-        <div className="figma-composer-dock">
-          <div className="figma-script-composer">
-            <div className="figma-composer-header">
-              <span
-                className="figma-script-label"
-                title="صندوق كتابة النص: اكتب هنا النص العربي أو العامي المراد تحويله لصوت"
-              >
-                SCRIPT INPUT
+      {/* Sticky Bottom Action / Composer Bar (Section 4.2) */}
+      <div className="figma-composer-dock">
+        <div className="figma-composer-container">
+          <div className="figma-composer-top-row">
+            <span className="figma-composer-label">SCRIPT INPUT</span>
+            <div className="figma-composer-meta">
+              <span>
+                {text.length} / {maxChars} chars
               </span>
-              <div className="figma-composer-meta">
-                <span
-                  className="figma-char-count"
-                  title="عدد الحروف المكتوبة من الحد الأقصى المسموح به"
-                >
-                  {text.length} / {maxChars} chars
-                </span>
-                {text.trim() && (
-                  <button
-                    type="button"
-                    className="figma-clear-btn"
-                    onClick={() => onTextChange("")}
-                    title="مسح النص المكتوب بالكامل للبدء من جديد"
-                  >
-                    <X size={13} />
-                    <span>Clear</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <textarea
-              ref={textareaRef}
-              className="figma-script-textarea"
-              placeholder="Type or paste your text here to generate high-quality Egyptian Arabic speech (or pick a workflow above)..."
-              value={text}
-              onChange={(e) => onTextChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              dir="auto"
-              rows={3}
-              title="مربع النص: اكتب النص بالعامية المصرية أو الفصحى (اضغط Ctrl + Enter للتوليد الفوري)"
-            />
-
-            <div className="figma-composer-divider" />
-
-            <div className="figma-script-toolbar">
-              <div className="figma-script-pills">
-                <span
-                  className="figma-pill figma-pill-engine"
-                  title="الموديل المستخدم: VoiceTut-TTS v1 المدرب على العامية المصرية"
-                >
-                  <Sparkles size={12} className="pill-ico" />
-                  <span>{modelName}</span>
-                </span>
-
+              {text.trim() && (
                 <button
                   type="button"
-                  className="figma-pill figma-pill-voice"
-                  onClick={() => onOpenVoicePicker("speaker")}
-                  title="انقر لتغيير الصوت المختار من السايد بار الأيمن"
+                  className="figma-secondary-chip"
+                  onClick={() => onTextChange("")}
+                  title="Clear text input"
                 >
-                  <span>{voiceName}</span>
+                  <X size={12} />
+                  <span>Clear</span>
                 </button>
+              )}
+            </div>
+          </div>
 
-                <button
-                  type="button"
-                  className="figma-pill figma-pill-lang"
+          {/* Auto-expanding Textarea (min-height: 22px, max-height: 210px) */}
+          <textarea
+            className="figma-composer-textarea"
+            placeholder="Type or paste your text here to generate high-quality Egyptian Arabic speech (or pick a starter above)..."
+            value={text}
+            onChange={(e) => onTextChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            dir="auto"
+            rows={2}
+            title="Type Arabic or Egyptian colloquial script (Press Ctrl + Enter to synthesize)"
+          />
+
+          {/* Bottom Controls Bar */}
+          <div className="figma-composer-bottom-bar">
+            {/* Left Group */}
+            <div className="figma-composer-left-group">
+              <button
+                type="button"
+                className="figma-icon-btn"
+                onClick={() => onOpenVoicePicker("clone")}
+                title="Add reference audio or clone voice"
+                aria-label="Add attachment"
+              >
+                <PlusCircle size={18} />
+              </button>
+
+              <div className="figma-composer-status-chip">
+                <span className="figma-status-dot" />
+                <span>Egyptian Arabic</span>
+              </div>
+
+              {/* Horizontal Scrollable Active Filter/Tool Strip */}
+              <button
+                type="button"
+                className="figma-filter-chip-close"
+                onClick={() => scrollToolStrip("left")}
+                aria-label="Scroll tools left"
+              >
+                <ChevronLeft size={14} />
+              </button>
+
+              <div className="figma-composer-tool-strip" ref={toolStripRef}>
+                <div
+                  className="figma-filter-chip"
+                  onClick={() => onOpenVoicePicker("speaker")}
+                  style={{ cursor: "pointer" }}
+                  title="Active Speaker"
+                >
+                  <Volume2 size={12} />
+                  <span>{voiceName}</span>
+                </div>
+
+                <div
+                  className="figma-filter-chip"
                   onClick={onToggleLanguage}
-                  title="انقر للتبديل بين العامية المصرية والإنجليزية"
+                  style={{ cursor: "pointer" }}
+                  title="Language setting"
                 >
                   <Globe size={12} />
-                  <span>{language === "arz" ? "Egyptian Arabic" : "English"}</span>
-                </button>
+                  <span>{language === "arz" ? "Egyptian (عامية)" : "English"}</span>
+                </div>
+
+                <div className="figma-filter-chip" title="Speech Pace">
+                  <Gauge size={12} />
+                  <span>{speed.toFixed(1)}x</span>
+                </div>
+
+                <div className="figma-filter-chip" title="Quality Steps">
+                  <Sparkles size={12} />
+                  <span>{numStep} steps</span>
+                </div>
               </div>
 
-              <div className="figma-script-actions">
-                <button
-                  type="button"
-                  className="figma-attach-btn"
-                  onClick={() => onOpenVoicePicker("clone")}
-                  title="استنساخ صوت مخصص: انقر لفتح لوحة الاستنساخ ورفع عينة صوتية أو التسجيل بالميكروفون"
-                  aria-label="Clone voice"
-                >
-                  <Plus size={16} />
-                </button>
+              <button
+                type="button"
+                className="figma-filter-chip-close"
+                onClick={() => scrollToolStrip("right")}
+                aria-label="Scroll tools right"
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
 
-                <button
-                  type="button"
-                  className="figma-generate-btn"
-                  disabled={busy || !text.trim()}
-                  onClick={onGenerate}
-                  title="توليد الصوت الآن (اختصار: Ctrl + Enter)"
-                >
-                  {busy ? (
-                    <>
-                      <Loader2 size={14} className="spin-icon" />
-                      <span>Generating…</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Generate</span>
-                      <kbd className="figma-kbd-hint">Ctrl ↵</kbd>
-                    </>
-                  )}
-                </button>
-              </div>
+            {/* Right Group */}
+            <div className="figma-composer-right-group">
+              <button
+                type="button"
+                className="figma-primary-cta"
+                onClick={onGenerate}
+                disabled={busy || !text.trim()}
+                title="Synthesize audio (Ctrl + Enter)"
+              >
+                {busy ? (
+                  <>
+                    <Loader2 size={14} className="spin" />
+                    <span>Synthesizing…</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={14} />
+                    <span>Synthesize Audio</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

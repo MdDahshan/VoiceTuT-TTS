@@ -1,6 +1,10 @@
+import { useState } from "react";
 import {
+  BookOpen,
+  Keyboard,
+  MoreVertical,
   PanelLeftOpen,
-  Plus,
+  RotateCcw,
   SlidersHorizontal,
 } from "lucide-react";
 
@@ -11,6 +15,8 @@ export interface PlaygroundHeaderProps {
   onToggleRightInspector: () => void;
   onClearSession: () => void;
   messagesCount: number;
+  onOpenShortcuts?: () => void;
+  onOpenMenu?: () => void;
 }
 
 export function PlaygroundHeader({
@@ -19,33 +25,36 @@ export function PlaygroundHeader({
   rightInspectorOpen,
   onToggleRightInspector,
   onClearSession,
+  messagesCount,
+  onOpenShortcuts,
+  onOpenMenu,
 }: PlaygroundHeaderProps) {
+  const [viewTitle, setViewTitle] = useState("Egyptian Arabic Speech Studio");
+
   return (
     <header className="figma-topbar">
       <div className="figma-topbar-left">
         {leftNavCollapsed && (
           <button
             type="button"
-            className="figma-icon-btn figma-topbar-expand"
+            className="figma-topbar-action-btn"
             onClick={onToggleLeftNav}
-            title="توسيع الشريط الجانبي الأيسر"
+            title="Expand left navigation sidebar"
             aria-label="Expand sidebar"
           >
             <PanelLeftOpen size={16} />
           </button>
         )}
         <div className="figma-topbar-titles">
-          <span
-            className="figma-topbar-title"
-            title="بيئة العمل التفاعلية لتوليد واختبار الأصوات"
-          >
-            Voice Studio Playground
-          </span>
-          <span
-            className="figma-topbar-sub"
-            title="تحويل النصوص إلى كلام واقعي بالعامية المصرية"
-          >
-            Egyptian Arabic Neural Speech Synthesis
+          <input
+            type="text"
+            className="figma-view-title"
+            value={viewTitle}
+            onChange={(e) => setViewTitle(e.target.value)}
+            title="Click to rename view title"
+          />
+          <span className="figma-view-status">
+            24 kHz · RTF 0.08x · {messagesCount > 0 ? `${messagesCount} clips` : "Ready"}
           </span>
         </div>
       </div>
@@ -53,26 +62,58 @@ export function PlaygroundHeader({
       <div className="figma-topbar-actions">
         <button
           type="button"
-          className="figma-icon-btn"
+          className="figma-topbar-action-btn"
           onClick={onClearSession}
-          title="جلسة جديدة: مسح النص الحالي وإعادة ضبط المشغل الصوتي"
+          title="New session / Clear script"
           aria-label="New session"
         >
-          <Plus size={16} />
+          <RotateCcw size={16} />
+        </button>
+
+        {onOpenShortcuts && (
+          <button
+            type="button"
+            className="figma-topbar-action-btn"
+            onClick={onOpenShortcuts}
+            title="Keyboard shortcuts (Press ?)"
+            aria-label="Keyboard shortcuts"
+          >
+            <Keyboard size={16} />
+          </button>
+        )}
+
+        <button
+          type="button"
+          className="figma-topbar-action-btn"
+          onClick={() => window.open("https://github.com/sha-2026/VoiceTuT-TTS", "_blank")}
+          title="Documentation & Model Card"
+          aria-label="Documentation"
+        >
+          <BookOpen size={16} />
         </button>
 
         <button
           type="button"
-          className={`figma-icon-btn ${rightInspectorOpen ? "active" : ""}`}
+          className={`figma-topbar-action-btn ${rightInspectorOpen ? "active" : ""}`}
           onClick={onToggleRightInspector}
           title={
             rightInspectorOpen
-              ? "إخفاء لوحة الإعدادات الجانبية"
-              : "فتح لوحة الإعدادات الجانبية (Run Settings)"
+              ? "Hide Configuration Drawer"
+              : "Open Configuration Drawer (Run Settings)"
           }
           aria-label="Toggle inspector"
         >
           <SlidersHorizontal size={16} />
+        </button>
+
+        <button
+          type="button"
+          className="figma-topbar-action-btn"
+          onClick={onOpenMenu}
+          title="More actions & options"
+          aria-label="More options"
+        >
+          <MoreVertical size={16} />
         </button>
       </div>
     </header>

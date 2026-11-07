@@ -1,5 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, CheckCircle2, History, Info as InfoIcon } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  History,
+  Info as InfoIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   getInfo,
@@ -62,7 +67,7 @@ export default function App() {
   const [info, setInfo] = useState<Info | null>(null);
   const [, setOffline] = useState(false);
 
-  // Panels State matching Figma 3-panel layout
+  // Panels State matching 3-pane desktop layout
   const [leftNavCollapsed, setLeftNavCollapsed] = useState(() => {
     if (typeof window !== "undefined") return window.innerWidth < 1100;
     return false;
@@ -72,6 +77,11 @@ export default function App() {
     return true;
   });
   const [rightInspectorVoiceExpanded, setRightInspectorVoiceExpanded] = useState(false);
+
+  // Modals state (Section 5.5)
+  const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
   const [activeLeftTab, setActiveLeftTab] = useState<LeftNavTab>("playground");
 
@@ -99,30 +109,22 @@ export default function App() {
   // Server info fetch
   useEffect(() => {
     let dead = false;
-    let timer = 0;
-    const load = () =>
-      getInfo()
-        .then((i) => {
-          if (dead) return;
-          setInfo(i);
-          setOffline(false);
-          setSpeaker(
-            (s) =>
-              s ??
-              i.speakers.find((x) => x.speaker_name === "Mohammed")?.speaker_id ??
-              i.speakers[0]?.speaker_id ??
-              "Mohammed",
-          );
-        })
-        .catch(() => {
-          if (dead) return;
-          setOffline(true);
-          timer = window.setTimeout(load, 4000);
-        });
-    load();
+    getInfo()
+      .then((data) => {
+        if (dead) return;
+        setInfo(data);
+        setOffline(false);
+        if (data.speakers?.length) {
+          const first = data.speakers[0].speaker_id;
+          setSpeaker((curr) => curr || first);
+        }
+      })
+      .catch(() => {
+        if (dead) return;
+        setOffline(true);
+      });
     return () => {
       dead = true;
-      clearTimeout(timer);
     };
   }, []);
 
@@ -135,78 +137,93 @@ export default function App() {
     }
   }, [params]);
 
-  // Space bar play/pause
+  // Global Keyboard Shortcuts
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement;
-      if (
-        e.code !== "Space" ||
-        t.closest("textarea, input, button, [role=slider], [role=option], a")
-      )
-        return;
-      const mode = engine.getState().mode;
-      if (mode !== "ready" && mode !== "streaming") return;
-      e.preventDefault();
-      engine.toggle();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (e.key === "Escape") {
+        setShortcutsModalOpen(false);
+        setProfileModalOpen(false);
+        setOptionsMenuOpen(false);
+      } else if (e.key === "?" && !["INPUT", "TEXTAREA"].includes(target?.tagName)) {
+        e.preventDefault();
+        setShortcutsModalOpen((prev) => !prev);
+      } else if (e.code === "Space" && !["INPUT", "TEXTAREA"].includes(target?.tagName)) {
+        const mode = engine.getState().mode;
+        if (mode === "ready" || mode === "streaming") {
+          e.preventDefault();
+          engine.toggle();
+        }
+      }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const busy = run === "busy";
-  const maxChars = info?.max_chars ?? 3000;
+  const availableSpeakers = info?.speakers?.length ? info.speakers : DEFAULT_SPEAKERS;
+  const currentSpeaker = availableSpeakers.find((s) => s.speaker_id === speaker);
 
-  const availableSpeakers =
-    info?.speakers && info.speakers.length > 0 ? info.speakers : DEFAULT_SPEAKERS;
-  const currentSpeakerObj = availableSpeakers.find((s) => s.speaker_id === speaker);
   const activeVoiceName =
     voiceMode === "clone"
-      ? clip?.name || "Cloned Voice"
-      : currentSpeakerObj?.speaker_name
-        ? `${currentSpeakerObj.speaker_name} (${currentSpeakerObj.arabic_name})`
+      ? clip?.name || "Cloned Voice Sample"
+      : currentSpeaker?.speaker_name
+        ? `${currentSpeaker.speaker_name} (${currentSpeaker.arabic_name})`
         : "Mohammed (محمد)";
+
   const activeVoiceDetails =
     voiceMode === "clone"
       ? clip
-        ? `Custom voice sample · ${formatTime(clip.duration)}`
-        : "Click to record or upload reference voice"
-      : `${currentSpeakerObj?.gender === "female" ? "Female" : "Male"} · Egyptian Arabic · ${currentSpeakerObj?.tags?.join(" · ") || "Natural"}`;
+        ? `Custom voice sample (${clip.duration.toFixed(1)}s)`
+        : "Reference audio needed"
+      : `${currentSpeaker?.gender === "female" ? "Female" : "Male"} · Egyptian Arabic · ${currentSpeaker?.tags?.join(" · ") || "Natural"}`;
 
+  const maxChars = info?.max_chars || 3000;
+  const busy = run === "busy";
+
+  // Add History item
   const addHistory = (
     audio: ArrayBuffer,
     m: Metrics,
-    duration: number,
+    dur: number,
     voice: string,
     t: string,
   ) => {
     const id = Date.now();
-    setHistory((h) => [{ id, text: t, voice, duration, audio, metrics: m }, ...h].slice(0, 50));
+    const item: HistoryItem = { id, text: t, voice, duration: dur, audio, metrics: m };
+    setHistory((h) => [item, ...h].slice(0, 50));
     setCurrentId(id);
   };
 
+  // Synthesize Speech handler
   const handleGenerate = async () => {
     if (busy) return;
-    const t = text.trim();
-    if (!t) return push("info", "Please enter text to generate speech / اكتب النص المراد توليده");
-    if (t.length > maxChars) return push("error", `Script exceeds maximum character limit (${maxChars} chars)`);
-    if (!info) return push("error", "Server is initializing, please wait a moment");
-    if (voiceMode === "speaker" && !speaker) return push("info", "Please select a voice from the sidebar");
+    const trimmed = text.trim();
+    if (!trimmed) {
+      push("error", "Please enter some text to synthesize");
+      return;
+    }
+    if (trimmed.length > maxChars) {
+      push("error", `Text exceeds limit of ${maxChars} characters`);
+      return;
+    }
+
     if (voiceMode === "clone" && !clip) {
+      push("error", "Please upload or record reference audio first");
       setRightInspectorOpen(true);
       setRightInspectorVoiceExpanded(true);
-      return push("info", "Please upload or record a reference voice sample in the sidebar for cloning");
+      return;
     }
 
     stopPreview();
     audioContext();
 
-    const voice = activeVoiceName;
+    const itemVoiceName = activeVoiceName;
     const req: SynthRequest = {
-      text: t,
+      text: trimmed,
       language,
       voiceMode,
-      speaker,
-      refAudio: clip?.wav ?? null,
+      speaker: voiceMode === "speaker" ? speaker : null,
+      refAudio: voiceMode === "clone" && clip ? clip.wav : null,
       refText,
       numStep: params.numStep,
       guidance: params.guidance,
@@ -220,48 +237,51 @@ export default function App() {
     try {
       const { audio, metrics: m } = await synthesize(req);
       await engine.load(audio);
-      addHistory(audio, m, m.audio, voice, t);
+      addHistory(audio, m, m.audio, itemVoiceName, trimmed);
       setRun("ready");
       push("ok", `Speech generated in ${m.total.toFixed(2)}s`);
-    } catch (e) {
+    } catch (err) {
       engine.reset();
       setRun("error");
-      push("error", (e as Error).message);
+      const msg = err instanceof Error ? err.message : String(err);
+      push("error", msg || "Synthesis failed");
     }
   };
 
-  const handleSelectHistory = async (h: HistoryItem) => {
-    setCurrentId(h.id);
-    setText(h.text);
-    await engine.load(h.audio);
+  const handleTogglePlay = () => {
+    engine.toggle();
+  };
+
+  const handleSelectHistory = async (item: HistoryItem) => {
+    setCurrentId(item.id);
+    setText(item.text);
+    await engine.load(item.audio);
     engine.play();
-  };
-
-  const handleNewSession = () => {
-    setText("");
-    engine.reset();
-    setCurrentTime(0);
-    push("info", "Clean session started");
-  };
-
-  const handleToggleLanguage = () => {
-    const nextLang = language === "arz" ? "en" : "arz";
-    setLanguage(nextLang);
-    push("info", `Language set to ${nextLang === "arz" ? "Egyptian Arabic (العامية المصرية)" : "English (US)"}`);
+    push("info", `Playing: "${item.text.slice(0, 24)}…"`);
   };
 
   const handleExportAll = () => {
-    if (!history.length) return push("info", "No audio recordings to export");
+    if (history.length === 0) {
+      push("info", "No audio clips to export");
+      return;
+    }
     history.forEach((h, idx) => {
       const blob = new Blob([h.audio], { type: "audio/wav" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `voicetut_clip_${idx + 1}.wav`;
+      a.download = `voicetut_clip_${idx + 1}_${h.voice.split(" ")[0]}.wav`;
       a.click();
       URL.revokeObjectURL(url);
     });
-    push("ok", `Exported ${history.length} audio clips as WAV`);
+    push("ok", `Exported ${history.length} audio clips as WAV files`);
+  };
+
+  const handleNewSession = () => {
+    engine.reset();
+    setText("");
+    setCurrentTime(0);
+    push("info", "New session started — cleared text script");
   };
 
   const handleOpenVoiceMode = (mode: VoiceMode = "speaker") => {
@@ -270,19 +290,14 @@ export default function App() {
     setRightInspectorVoiceExpanded(true);
   };
 
-  const handleTogglePlay = () => {
-    if (st.mode === "ready" || st.mode === "streaming") {
-      engine.toggle();
-    } else if (text.trim() && !busy) {
-      void handleGenerate();
-    } else {
-      push("info", "Enter text and click Generate Speech to synthesize audio");
-    }
+  const handleToggleLanguage = () => {
+    setLanguage((l) => (l === "arz" ? "en" : "arz"));
+    push("info", `Language set to ${language === "arz" ? "English" : "Egyptian Arabic (عامية)"}`);
   };
 
   return (
     <div className="figma-studio-layout">
-      {/* 1. Left Sidebar Navigation */}
+      {/* 1. Left Sidebar Navigation (Section 4.1) */}
       <LeftNav
         activeTab={activeLeftTab}
         onSelectTab={setActiveLeftTab}
@@ -300,9 +315,11 @@ export default function App() {
         currentTime={currentTime}
         duration={st.duration || 0}
         onExportAll={handleExportAll}
+        onOpenShortcuts={() => setShortcutsModalOpen(true)}
+        onOpenProfile={() => setProfileModalOpen(true)}
       />
 
-      {/* 2. Center Workspace */}
+      {/* 2. Center Workspace (Section 4.2) */}
       <div className="figma-center-stage">
         <PlaygroundHeader
           leftNavCollapsed={leftNavCollapsed}
@@ -311,52 +328,61 @@ export default function App() {
           onToggleRightInspector={() => setRightInspectorOpen((o) => !o)}
           onClearSession={handleNewSession}
           messagesCount={history.length}
+          onOpenShortcuts={() => setShortcutsModalOpen(true)}
+          onOpenMenu={() => setOptionsMenuOpen(true)}
         />
 
         {activeLeftTab === "history" ? (
-          <div className="studio-history-view">
-            <div className="studio-history-head">
-              <div className="history-head-title">
-                <History size={18} />
-                <h2>Recording History ({history.length})</h2>
+          <div className="figma-canvas-scroll">
+            <div className="figma-canvas-inner">
+              <div className="figma-showcase-header">
+                <h1 className="figma-showcase-title">Session Recordings & History</h1>
+                <p className="figma-showcase-sub">
+                  Review, replay, and manage audio clips generated during this studio session.
+                </p>
               </div>
-              <p
-                title="سجل المقاطع والتسجيلات الصوتية المولدة في هذه الجلسة مع إمكانية إعادة تشغيلها وتحميلها"
-              >
-                Generated speech clips and session audio recordings
-              </p>
-            </div>
-            {history.length === 0 ? (
-              <div
-                className="empty-history-box"
-                title="لا توجد تسجيلات بعد — اكتب نصاً واضغط على توليد الصوت لإنشاء أول مقطع"
-              >
-                <History size={32} />
-                <p>No audio clips generated yet</p>
-                <small>Generated speech clips will automatically appear here</small>
-              </div>
-            ) : (
-              <div className="history-cards-grid">
-                {history.map((h) => (
-                  <div
-                    key={h.id}
-                    className={`history-card-item ${h.id === currentId ? "active" : ""}`}
-                    onClick={() => handleSelectHistory(h)}
-                    role="button"
-                    tabIndex={0}
-                    title={`انقر لتحميل وتشغيل هذا المقطع: "${h.text}"`}
-                  >
-                    <div className="card-top">
-                      <span className="voice-badge">{h.voice}</span>
-                      <span className="dur num">{formatTime(h.duration)}</span>
+
+              {history.length === 0 ? (
+                <div className="figma-preview-stage-container" style={{ textAlign: "center", padding: "40px" }}>
+                  <History size={32} color="#A0A0A0" style={{ margin: "0 auto 12px" }} />
+                  <p style={{ color: "var(--text-secondary)", fontSize: "14px", fontWeight: 500 }}>
+                    No audio clips generated yet
+                  </p>
+                  <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
+                    Synthesize any text in the playground to begin creating recordings.
+                  </span>
+                </div>
+              ) : (
+                <div className="figma-showcase-grid">
+                  {history.map((h) => (
+                    <div
+                      key={h.id}
+                      className="figma-tile-card"
+                      onClick={() => handleSelectHistory(h)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="figma-tile-media">
+                        <svg className="figma-tile-media-svg" viewBox="0 0 200 112" fill="none">
+                          <path
+                            d="M 10 56 Q 30 20, 50 56 T 90 56 T 130 30 T 170 56 T 190 56"
+                            stroke="#E5E7EB"
+                            strokeWidth="2"
+                            fill="none"
+                          />
+                        </svg>
+                      </div>
+                      <div className="figma-tile-footer">
+                        <span className="figma-tile-title">{h.text}</span>
+                        <span className="figma-tile-badge">
+                          {formatTime(h.duration)} · {h.voice}
+                        </span>
+                      </div>
                     </div>
-                    <p className="card-text" dir="auto">
-                      {h.text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <VoiceStudioPlayground
@@ -366,7 +392,7 @@ export default function App() {
             voiceDetails={activeVoiceDetails}
             language={language}
             onToggleLanguage={handleToggleLanguage}
-            modelName="VoiceTut-TTS v1"
+            modelName="VoiceTuT-TTS v1"
             onOpenVoicePicker={handleOpenVoiceMode}
             busy={busy}
             onGenerate={handleGenerate}
@@ -376,11 +402,13 @@ export default function App() {
             duration={st.duration || 0}
             onSeek={(frac) => engine.seek(frac)}
             maxChars={maxChars}
+            speed={params.speed}
+            numStep={params.numStep}
           />
         )}
       </div>
 
-      {/* 3. Right Inspector Surface — Inline Voice Management, NO POPUPS! */}
+      {/* 3. Right Inspector Surface (Section 4.3) */}
       <RightInspector
         open={rightInspectorOpen}
         onClose={() => setRightInspectorOpen(false)}
@@ -404,6 +432,149 @@ export default function App() {
         voiceExpanded={rightInspectorVoiceExpanded}
         onToggleVoiceExpanded={() => setRightInspectorVoiceExpanded((e) => !e)}
       />
+
+      {/* 5.5 Floating Panels & Modal Dialogs: Keyboard Shortcuts */}
+      {shortcutsModalOpen && (
+        <div className="figma-modal-backdrop" onClick={() => setShortcutsModalOpen(false)}>
+          <div className="figma-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="figma-modal-header">
+              <h2 className="figma-modal-title">Keyboard Shortcuts</h2>
+              <button
+                type="button"
+                className="figma-modal-close-btn"
+                onClick={() => setShortcutsModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "12px" }}>
+              <div className="figma-setting-row-horizontal">
+                <span className="figma-setting-label">Synthesize Speech</span>
+                <div>
+                  <span className="kbd">Ctrl</span> + <span className="kbd">Enter</span>
+                </div>
+              </div>
+              <div className="figma-setting-row-horizontal">
+                <span className="figma-setting-label">Play / Pause Audio</span>
+                <div>
+                  <span className="kbd">Space</span>
+                </div>
+              </div>
+              <div className="figma-setting-row-horizontal">
+                <span className="figma-setting-label">Toggle Shortcuts Guide</span>
+                <div>
+                  <span className="kbd">?</span>
+                </div>
+              </div>
+              <div className="figma-setting-row-horizontal">
+                <span className="figma-setting-label">Close Modal / Panels</span>
+                <div>
+                  <span className="kbd">Esc</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5.5 Floating Panels & Modal Dialogs: Account & Workspace Switcher */}
+      {profileModalOpen && (
+        <div className="figma-modal-backdrop" onClick={() => setProfileModalOpen(false)}>
+          <div className="figma-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="figma-modal-header">
+              <h2 className="figma-modal-title">Account & Workspace</h2>
+              <button
+                type="button"
+                className="figma-modal-close-btn"
+                onClick={() => setProfileModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div className="figma-account-avatar" style={{ width: "40px", height: "40px", fontSize: "14px" }}>
+                  VP
+                </div>
+                <div>
+                  <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-primary)" }}>
+                    Studio Audio Producer
+                  </div>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>producer@voicetut.ai</div>
+                </div>
+              </div>
+
+              <div className="figma-field-group">
+                <div className="figma-setting-row-horizontal">
+                  <span className="figma-setting-label">Workspace Plan</span>
+                  <span className="figma-tier-badge">PRO TIER</span>
+                </div>
+                <div className="figma-setting-row-horizontal">
+                  <span className="figma-setting-label">Inference Compute</span>
+                  <span style={{ fontSize: "12px", color: "var(--text-primary)" }}>NVIDIA CUDA GPU</span>
+                </div>
+                <div className="figma-setting-row-horizontal">
+                  <span className="figma-setting-label">Egyptian Arabic Corpus</span>
+                  <span style={{ fontSize: "12px", color: "var(--text-primary)" }}>24 kHz High Fidelity</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5.5 Options & Overflow Popover Modal */}
+      {optionsMenuOpen && (
+        <div className="figma-modal-backdrop" onClick={() => setOptionsMenuOpen(false)}>
+          <div className="figma-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="figma-modal-header">
+              <h2 className="figma-modal-title">Studio Actions</h2>
+              <button
+                type="button"
+                className="figma-modal-close-btn"
+                onClick={() => setOptionsMenuOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "10px" }}>
+              <button
+                type="button"
+                className="figma-btn-secondary"
+                style={{ textAlign: "left", padding: "10px" }}
+                onClick={() => {
+                  handleExportAll();
+                  setOptionsMenuOpen(false);
+                }}
+              >
+                Export All Session Audio (WAV)
+              </button>
+              <button
+                type="button"
+                className="figma-btn-secondary"
+                style={{ textAlign: "left", padding: "10px" }}
+                onClick={() => {
+                  handleNewSession();
+                  setOptionsMenuOpen(false);
+                }}
+              >
+                Reset / Start New Session
+              </button>
+              <button
+                type="button"
+                className="figma-btn-secondary"
+                style={{ textAlign: "left", padding: "10px" }}
+                onClick={() => {
+                  setShortcutsModalOpen(true);
+                  setOptionsMenuOpen(false);
+                }}
+              >
+                View Keyboard Shortcuts
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notifications */}
       <div className="toasts" aria-live="polite">
