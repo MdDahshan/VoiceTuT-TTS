@@ -308,34 +308,37 @@ export function RightInspector({
         </div>
 
         {/* 5.8 Segmented Folder Tabs */}
-        <div className="figma-folder-tabs">
-          <div
+        <div className="figma-folder-tabs" role="tablist">
+          <button
+            type="button"
             className={`figma-folder-tab ${activeTab === "speakers" ? "active" : ""}`}
             onClick={() => setActiveTab("speakers")}
             role="tab"
-            tabIndex={0}
+            aria-selected={activeTab === "speakers"}
           >
-            <Users size={13} />
+            <Users size={12} className="figma-folder-tab-icon" />
             <span>Speakers ({speakers.length})</span>
-          </div>
-          <div
+          </button>
+          <button
+            type="button"
             className={`figma-folder-tab ${activeTab === "clone" ? "active" : ""}`}
             onClick={() => setActiveTab("clone")}
             role="tab"
-            tabIndex={0}
+            aria-selected={activeTab === "clone"}
           >
-            <Wand2 size={13} />
+            <Wand2 size={12} className="figma-folder-tab-icon" />
             <span>Voice Clone</span>
-          </div>
-          <div
+          </button>
+          <button
+            type="button"
             className={`figma-folder-tab ${activeTab === "params" ? "active" : ""}`}
             onClick={() => setActiveTab("params")}
             role="tab"
-            tabIndex={0}
+            aria-selected={activeTab === "params"}
           >
-            <Sliders size={13} />
+            <Sliders size={12} className="figma-folder-tab-icon" />
             <span>Parameters</span>
-          </div>
+          </button>
         </div>
 
         {/* TAB 1: SPEAKERS */}
