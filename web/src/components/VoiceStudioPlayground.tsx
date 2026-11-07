@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { formatTime } from "../audio";
 import {
   ArrowUpRight,
+  BookOpen,
   ChevronLeft,
   ChevronRight,
   Cpu,
@@ -9,6 +10,8 @@ import {
   Gauge,
   Globe,
   Loader2,
+  MessageSquare,
+  Mic,
   Pause,
   Play,
   PlusCircle,
@@ -135,7 +138,8 @@ export function VoiceStudioPlayground({
                 onClick={() => onTextChange(SAMPLE_SCRIPTS.narration)}
                 title="Load Commercial & Promo Script"
               >
-                <span>🎙️ Commercial & Voiceover</span>
+                <Mic size={13} />
+                <span>Commercial & Voiceover</span>
               </button>
               <button
                 type="button"
@@ -143,7 +147,8 @@ export function VoiceStudioPlayground({
                 onClick={() => onTextChange(SAMPLE_SCRIPTS.audiobook)}
                 title="Load Narrative Audiobook Script"
               >
-                <span>📖 Audiobook & Story</span>
+                <BookOpen size={13} />
+                <span>Audiobook & Story</span>
               </button>
               <button
                 type="button"
@@ -151,7 +156,8 @@ export function VoiceStudioPlayground({
                 onClick={() => onTextChange(SAMPLE_SCRIPTS.conversational)}
                 title="Load Colloquial Dialogue Script"
               >
-                <span>💬 Colloquial Support Dialogue</span>
+                <MessageSquare size={13} />
+                <span>Colloquial Dialogue</span>
               </button>
             </div>
           </div>

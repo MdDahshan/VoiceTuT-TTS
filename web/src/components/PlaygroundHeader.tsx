@@ -3,14 +3,11 @@ import {
   BookOpen,
   Keyboard,
   MoreVertical,
-  PanelLeftOpen,
   RotateCcw,
   SlidersHorizontal,
 } from "lucide-react";
 
 export interface PlaygroundHeaderProps {
-  leftNavCollapsed: boolean;
-  onToggleLeftNav: () => void;
   rightInspectorOpen: boolean;
   onToggleRightInspector: () => void;
   onClearSession: () => void;
@@ -20,8 +17,6 @@ export interface PlaygroundHeaderProps {
 }
 
 export function PlaygroundHeader({
-  leftNavCollapsed,
-  onToggleLeftNav,
   rightInspectorOpen,
   onToggleRightInspector,
   onClearSession,
@@ -34,17 +29,6 @@ export function PlaygroundHeader({
   return (
     <header className="figma-topbar">
       <div className="figma-topbar-left">
-        {leftNavCollapsed && (
-          <button
-            type="button"
-            className="figma-topbar-action-btn"
-            onClick={onToggleLeftNav}
-            title="Expand left navigation sidebar"
-            aria-label="Expand sidebar"
-          >
-            <PanelLeftOpen size={16} />
-          </button>
-        )}
         <div className="figma-topbar-titles">
           <input
             type="text"

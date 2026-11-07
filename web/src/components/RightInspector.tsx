@@ -11,14 +11,20 @@ import { stopPreview, usePreview } from "../hooks";
 import { DEFAULT_PARAMS, type Params } from "./Settings";
 import type { RefClip } from "./Voices";
 import {
+  BookOpen,
   Check,
   ChevronDown,
   ChevronUp,
+  MessageSquare,
   Mic,
   Play,
   RotateCcw,
   Search,
+  Sliders,
+  Sparkles,
   Square,
+  Users,
+  Wand2,
   X,
 } from "lucide-react";
 
@@ -309,7 +315,8 @@ export function RightInspector({
             role="tab"
             tabIndex={0}
           >
-            Speakers ({speakers.length})
+            <Users size={13} />
+            <span>Speakers ({speakers.length})</span>
           </div>
           <div
             className={`figma-folder-tab ${activeTab === "clone" ? "active" : ""}`}
@@ -317,7 +324,8 @@ export function RightInspector({
             role="tab"
             tabIndex={0}
           >
-            Voice Clone
+            <Wand2 size={13} />
+            <span>Voice Clone</span>
           </div>
           <div
             className={`figma-folder-tab ${activeTab === "params" ? "active" : ""}`}
@@ -325,7 +333,8 @@ export function RightInspector({
             role="tab"
             tabIndex={0}
           >
-            Parameters
+            <Sliders size={13} />
+            <span>Parameters</span>
           </div>
         </div>
 
@@ -572,21 +581,24 @@ export function RightInspector({
                   className="figma-action-grid-btn"
                   onClick={() => applyPresetProfile("conversational")}
                 >
-                  Dialogue
+                  <MessageSquare size={13} />
+                  <span>Dialogue</span>
                 </button>
                 <button
                   type="button"
                   className="figma-action-grid-btn"
                   onClick={() => applyPresetProfile("narrative")}
                 >
-                  Storybook
+                  <BookOpen size={13} />
+                  <span>Storybook</span>
                 </button>
                 <button
                   type="button"
                   className="figma-action-grid-btn"
                   onClick={() => applyPresetProfile("expressive")}
                 >
-                  Studio HiFi
+                  <Sparkles size={13} />
+                  <span>Studio HiFi</span>
                 </button>
               </div>
             </div>

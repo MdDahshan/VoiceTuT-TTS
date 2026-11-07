@@ -338,8 +338,6 @@ export default function App() {
       {/* 2. Center Workspace (Section 4.2) */}
       <div className="figma-center-stage">
         <PlaygroundHeader
-          leftNavCollapsed={leftNavCollapsed}
-          onToggleLeftNav={() => setLeftNavCollapsed((c) => !c)}
           rightInspectorOpen={rightInspectorOpen}
           onToggleRightInspector={() => setRightInspectorOpen((o) => !o)}
           onClearSession={handleNewSession}

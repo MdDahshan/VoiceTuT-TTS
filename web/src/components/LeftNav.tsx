@@ -87,27 +87,41 @@ export function LeftNav({
     <aside className={`figma-sidebar ${collapsed ? "collapsed" : ""}`}>
       {/* Top Brand Header (44px) */}
       <div className="figma-sidebar-header">
-        <div
-          className="figma-brand-group"
-          onClick={() => onSelectTab("playground")}
-          role="button"
-          tabIndex={0}
-          title="Voice Studio: Egyptian Colloquial Arabic Speech Studio"
-        >
-          <div className="figma-brand-tile">
-            <span className="figma-brand-mark">V</span>
-          </div>
-          {!collapsed && <span className="figma-brand-title">VOICE STUDIO</span>}
-        </div>
-        <button
-          type="button"
-          className="figma-collapse-btn"
-          onClick={onToggleCollapse}
-          title={collapsed ? "Expand sidebar (250px)" : "Collapse sidebar"}
-          aria-label="Toggle sidebar"
-        >
-          {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-        </button>
+        {collapsed ? (
+          <button
+            type="button"
+            className="figma-collapse-btn"
+            onClick={onToggleCollapse}
+            title="Expand sidebar"
+            aria-label="Expand sidebar"
+          >
+            <PanelLeftOpen size={17} />
+          </button>
+        ) : (
+          <>
+            <div
+              className="figma-brand-group"
+              onClick={() => onSelectTab("playground")}
+              role="button"
+              tabIndex={0}
+              title="Voice Studio: Egyptian Colloquial Arabic Speech Studio"
+            >
+              <div className="figma-brand-tile">
+                <span className="figma-brand-mark">V</span>
+              </div>
+              <span className="figma-brand-title">VOICE STUDIO</span>
+            </div>
+            <button
+              type="button"
+              className="figma-collapse-btn"
+              onClick={onToggleCollapse}
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
+            >
+              <PanelLeftClose size={17} />
+            </button>
+          </>
+        )}
       </div>
 
       {/* Navigation Groups Scrollable Container */}
@@ -283,7 +297,35 @@ export function LeftNav({
         <div className="figma-nav-spacer" />
 
         {/* Bottom Utility Stack (Section 4.1) */}
-        {!collapsed && (
+        {collapsed ? (
+          <div className="figma-collapsed-bottom-icons">
+            {onOpenShortcuts && (
+              <button
+                type="button"
+                className="figma-sidebar-utility-btn"
+                onClick={onOpenShortcuts}
+                title="Keyboard Shortcuts"
+                aria-label="Shortcuts"
+              >
+                <Keyboard size={16} />
+              </button>
+            )}
+            <button
+              type="button"
+              className="figma-sidebar-utility-btn"
+              onClick={onOpenProfile}
+              title="Account & Workspace Settings"
+              aria-label="Account Settings"
+            >
+              <div
+                className="figma-account-avatar"
+                style={{ width: 24, height: 24, fontSize: 10, margin: "0 auto" }}
+              >
+                <span>VP</span>
+              </div>
+            </button>
+          </div>
+        ) : (
           <div className="figma-sidebar-bottom-stack">
             {/* 1. Callout / Promo Card */}
             <div
