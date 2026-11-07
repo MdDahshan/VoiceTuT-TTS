@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   assetUrl,
   type Info,
+  type Language,
   type Speaker,
   type VoiceMode,
 } from "../api";
@@ -9,32 +10,24 @@ import { formatTime, toReferenceWav } from "../audio";
 import { stopPreview, usePreview } from "../hooks";
 import { DEFAULT_PARAMS, type Params } from "./Settings";
 import type { RefClip } from "./Voices";
-import {
-  imgSettingsClose,
-  imgVoiceAvatar,
-  imgChevronDown,
-  imgStabilityThumb,
-  imgSpeakerBoostKnob,
-  imgNoiseReductionKnob,
-} from "../assets/figmaIcons";
-import {
-  GenderIcon,
-  Eq,
-} from "./ui";
+import { GenderIcon, Eq } from "./ui";
 import {
   Check,
+  ChevronDown,
+  ChevronUp,
   Mic,
   Play,
   RotateCcw,
   Search,
   ShieldCheck,
+  Sparkles,
   Square,
   Trash2,
   Upload,
   UserRound,
   Wand2,
+  X,
 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
 
 export interface RightInspectorProps {
   open: boolean;
@@ -42,6 +35,8 @@ export interface RightInspectorProps {
   info: Info | null;
   params: Params;
   onChangeParams: (p: Params) => void;
+  language: Language;
+  onChangeLanguage: (l: Language) => void;
   voiceMode: VoiceMode;
   onVoiceMode: (m: VoiceMode) => void;
   speaker: string | null;
@@ -51,8 +46,6 @@ export interface RightInspectorProps {
   onClip: (c: RefClip | null) => void;
   refText: string;
   onRefText: (t: string) => void;
-  speakingStyle: string;
-  onChangeSpeakingStyle: (s: string) => void;
   onGenerate?: () => void;
   busy?: boolean;
   onToast: (kind: "error" | "info" | "ok", text: string) => void;
@@ -68,6 +61,8 @@ export function RightInspector({
   info,
   params,
   onChangeParams,
+  language,
+  onChangeLanguage,
   voiceMode,
   onVoiceMode,
   speaker,
@@ -77,8 +72,6 @@ export function RightInspector({
   onClip,
   refText,
   onRefText,
-  speakingStyle,
-  onChangeSpeakingStyle,
   onGenerate,
   busy = false,
   onToast,
@@ -102,7 +95,7 @@ export function RightInspector({
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recordingLevels, setRecordingLevels] = useState<number[]>(() =>
-    Array(28).fill(0.06),
+    Array(24).fill(0.08),
   );
   const [clipPlaying, setClipPlaying] = useState(false);
   const recorderRef = useRef<{ stop: () => void } | null>(null);
@@ -124,16 +117,16 @@ export function RightInspector({
   const currentSpeaker = speakers.find((s) => s.speaker_id === speaker);
   const voiceName =
     voiceMode === "clone"
-      ? clip?.name || "صوت مستنسخ"
-      : currentSpeaker?.arabic_name
-        ? `${currentSpeaker.arabic_name} (${currentSpeaker.speaker_name})`
-        : "محمد (Mohammed)";
+      ? clip?.name || "Cloned Voice"
+      : currentSpeaker?.speaker_name
+        ? `${currentSpeaker.speaker_name} (${currentSpeaker.arabic_name})`
+        : "Mohammed (محمد)";
   const voiceSub =
     voiceMode === "clone"
       ? clip
-        ? `صوت مرجعي · ${formatTime(clip.duration)}`
-        : "اضغط لتسجيل أو رفع صوت مرجعي"
-      : `${currentSpeaker?.gender === "female" ? "مصرية · أنثى" : "مصري · ذكر"} · ${currentSpeaker?.tags?.join(" · ") || "طبيعي"}`;
+        ? `Custom voice sample · ${formatTime(clip.duration)}`
+        : "Click to record or upload reference voice"
+      : `${currentSpeaker?.gender === "female" ? "Female" : "Male"} · Egyptian Arabic · ${currentSpeaker?.tags?.join(" · ") || "Natural"}`;
 
   // Filtered built-in speakers list
   const filteredSpeakers = speakers.filter((s) => {
@@ -147,24 +140,19 @@ export function RightInspector({
     return matchesGender && matchesQuery;
   });
 
-  // Slider conversions
-  const stepsFrac = Math.min(100, Math.max(0, ((params.numStep - 8) / (64 - 8)) * 100));
-  const guidanceFrac = Math.min(100, Math.max(0, ((params.guidance - 0.5) / (5.0 - 0.5)) * 100));
-  const speedFrac = Math.min(100, Math.max(0, ((params.speed - 0.5) / (2.0 - 0.5)) * 100));
-
   const handleSavePreset = () => {
     localStorage.setItem(
       "voicetut-preset",
       JSON.stringify({
         params,
-        speakingStyle,
+        language,
         speakerBoost,
         outputFormat,
       }),
     );
     setPresetSaved(true);
     setTimeout(() => setPresetSaved(false), 2000);
-    onToast("ok", "تم حفظ الإعدادات بنجاح");
+    onToast("ok", "Preset saved successfully");
   };
 
   // Process reference audio
@@ -172,14 +160,14 @@ export function RightInspector({
     try {
       const { wav, duration, peaks } = await toReferenceWav(blob, 20);
       if (duration < 2) {
-        onToast("error", "المقطع قصير جداً — مطلوب ثانيتين على الأقل");
+        onToast("error", "Audio sample too short — at least 2 seconds required");
         return;
       }
       if (clip) URL.revokeObjectURL(clip.url);
       onClip({ wav, url: URL.createObjectURL(wav), duration, peaks, name });
-      onToast("ok", `تم تجهيز المقطع المرجعي (${duration.toFixed(1)} ثانية)`);
+      onToast("ok", `Reference voice ready (${duration.toFixed(1)}s)`);
     } catch {
-      onToast("error", "تعذر قراءة الملف — يرجى استخدام صيغة WAV أو MP3");
+      onToast("error", "Could not process audio — please use a WAV or MP3 file");
     }
   };
 
@@ -192,7 +180,7 @@ export function RightInspector({
         audio: { echoCancellation: true, noiseSuppression: true },
       });
     } catch {
-      onToast("error", "يرجى السماح بالوصول إلى الميكروفون للتسجيل");
+      onToast("error", "Microphone access is required for recording");
       return;
     }
     const mediaRecorder = new MediaRecorder(stream);
@@ -244,7 +232,7 @@ export function RightInspector({
       if (chunks.length) {
         void handleAcceptAudioBlob(
           new Blob(chunks, { type: mediaRecorder.mimeType }),
-          "تسجيل الميكروفون",
+          "Microphone Recording",
         );
       }
     };
@@ -277,42 +265,73 @@ export function RightInspector({
     <aside className="figma-inspector">
       {/* Top Header */}
       <div className="figma-inspector-head">
-        <span className="figma-inspector-title">Run settings / إعدادات التوليد</span>
+        <div className="figma-inspector-header-info">
+          <span className="figma-inspector-title">Run Settings</span>
+          <span
+            className="figma-inspector-help-hint"
+            title="إعدادات التوليد: تحكم في الصوت المختار، سرعة النطق، دقة التوليد، ومطابقة الصوت المرجعي."
+          >
+            Hover for Arabic help
+          </span>
+        </div>
         <div className="figma-inspector-actions">
           <button
+            type="button"
             className="figma-icon-btn sm"
-            onClick={() => onChangeParams(DEFAULT_PARAMS)}
-            title="إعادة تعيين للإعدادات الافتراضية"
+            onClick={() => {
+              onChangeParams(DEFAULT_PARAMS);
+              onToast("info", "Reset settings to defaults");
+            }}
+            title="إعادة تعيين كافة المعايير إلى القيم الافتراضية الموصى بها"
+            aria-label="Reset to defaults"
           >
-            <RotateCcw size={14} />
+            <RotateCcw size={15} />
           </button>
           <button
+            type="button"
             className="figma-icon-btn sm"
             onClick={onClose}
-            title="إغلاق الإعدادات"
+            title="إغلاق لوحة الإعدادات الجانبية"
+            aria-label="Close inspector"
           >
-            <img src={imgSettingsClose} alt="Close" className="figma-close-icon" />
+            <X size={16} />
           </button>
         </div>
       </div>
 
       <div className="figma-inspector-scroll">
-        {/* Real Model Information Card */}
-        <div className="figma-model-card">
-          <div className="figma-model-eyebrow">VOICE MODEL</div>
-          <div className="figma-model-title">{info?.name || "VoiceTut-TTS"}</div>
-          <div className="figma-model-tag">
-            {info?.model_version || "v1"} · {info?.device ? info.device.toUpperCase() : "CUDA"} ·{" "}
-            {info?.sampling_rate ? `${info.sampling_rate / 1000} kHz` : "24 kHz"}
+        {/* Model Info Card */}
+        <div
+          className="figma-model-card"
+          title="معلومات الموديل: نموذج VoiceTut-TTS المدرب خصيصاً على اللهجة المصرية والعربية بجودة استوديو عالية."
+        >
+          <div className="figma-model-header-row">
+            <div className="figma-model-badge">
+              <Sparkles size={11} />
+              <span>ACTIVE MODEL</span>
+            </div>
+            <span className="figma-model-chip">
+              {info?.device ? info.device.toUpperCase() : "CUDA"} ·{" "}
+              {info?.sampling_rate ? `${info.sampling_rate / 1000} kHz` : "24 kHz"}
+            </span>
           </div>
+          <div className="figma-model-title">{info?.name || "VoiceTut-TTS"}</div>
           <div className="figma-model-desc">
-            نموذج تحويل النص إلى كلام بالعامية المصرية بأعلى جودة ودقة تعبيرية.
+            End-to-end neural speech synthesis trained on colloquial Egyptian Arabic and modern standard Arabic.
           </div>
         </div>
 
         {/* VOICE SELECTOR & INLINE CLONING — NO POPUPS! */}
-        <div className="figma-inspector-section">
-          <div className="figma-section-title">الصوت والحديث / Voice</div>
+        <div className="figma-section-block">
+          <div className="figma-section-header">
+            <span className="figma-section-title">Voice & Identity</span>
+            <span
+              className="figma-section-tip"
+              title="اختر صوتاً من قائمة الأصوات الجاهزة أو استخدم ميزة استنساخ صوت مخصص عبر رفع عينة أو التسجيل المباشر."
+            >
+              (?)
+            </span>
+          </div>
 
           {/* Active Voice Box (Click to Expand / Collapse) */}
           <div
@@ -320,10 +339,9 @@ export function RightInspector({
             onClick={toggleExpanded}
             role="button"
             tabIndex={0}
-            title="اضغط لاختيار صوت أو استنساخ صوت جديد"
+            title="انقر لفتح قائمة الأصوات الجاهزة أو البدء في استنساخ صوت جديد داخل السايد بار"
           >
             <div className="figma-voice-avatar-wrap">
-              <img src={imgVoiceAvatar} alt="" className="figma-voice-avatar-bg" />
               <span className="figma-voice-avatar-letter">
                 {voiceMode === "clone" ? "C" : currentSpeaker?.speaker_name?.charAt(0) || "M"}
               </span>
@@ -332,468 +350,514 @@ export function RightInspector({
               <span className="figma-voice-name">{voiceName}</span>
               <span className="figma-voice-sub">{voiceSub}</span>
             </div>
-            <img
-              src={imgChevronDown}
-              alt=""
-              className={`figma-chevron-icon ${isExpanded ? "figma-chevron-rotated" : ""}`}
-            />
+            {isExpanded ? (
+              <ChevronUp size={16} className="figma-chevron-icon" />
+            ) : (
+              <ChevronDown size={16} className="figma-chevron-icon" />
+            )}
           </div>
 
           {/* Inline Voice Management Panel */}
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.div
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.15 }}
-                className="figma-inline-voice-picker"
-              >
-                {/* Mode Switcher Tabs */}
-                <div className="figma-picker-modes">
-                  <button
-                    type="button"
-                    className={`figma-picker-mode-btn ${voiceMode === "speaker" ? "active" : ""}`}
-                    onClick={() => onVoiceMode("speaker")}
-                  >
-                    <UserRound size={14} />
-                    <span>أصوات النظام ({speakers.length})</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`figma-picker-mode-btn ${voiceMode === "clone" ? "active" : ""}`}
-                    onClick={() => onVoiceMode("clone")}
-                  >
-                    <Wand2 size={14} />
-                    <span>استنساخ صوت</span>
-                  </button>
-                </div>
+          {isExpanded && (
+            <div className="figma-inline-voice-picker">
+              {/* Mode Switcher Tabs */}
+              <div className="figma-picker-modes">
+                <button
+                  type="button"
+                  className={`figma-picker-mode-btn ${voiceMode === "speaker" ? "active" : ""}`}
+                  onClick={() => onVoiceMode("speaker")}
+                  title="استعراض واختيار أحد الأصوات الـ 19 الرسمية المدمجة في النظام"
+                >
+                  <UserRound size={13} />
+                  <span>System Voices ({speakers.length})</span>
+                </button>
+                <button
+                  type="button"
+                  className={`figma-picker-mode-btn ${voiceMode === "clone" ? "active" : ""}`}
+                  onClick={() => onVoiceMode("clone")}
+                  title="استنساخ صوت جديد من ملف مسجل أو عبر التسجيل الفوري من الميكروفون"
+                >
+                  <Wand2 size={13} />
+                  <span>Clone Voice</span>
+                </button>
+              </div>
 
-                {/* 1. Built-in Speakers Tab */}
-                {voiceMode === "speaker" ? (
-                  <div className="figma-speakers-browser">
-                    {/* Search Bar */}
-                    <div className="figma-speaker-search-bar">
-                      <Search size={14} className="figma-search-icon" />
-                      <input
-                        type="text"
-                        placeholder="دوّر باسم الصوت أو طابعه…"
-                        value={speakerSearch}
-                        onChange={(e) => setSpeakerSearch(e.target.value)}
-                        className="figma-speaker-search-input"
-                        dir="auto"
-                      />
-                    </div>
-
-                    {/* Gender Filters */}
-                    <div className="figma-gender-tabs">
+              {/* 1. Built-in Speakers Tab */}
+              {voiceMode === "speaker" ? (
+                <div className="figma-speakers-browser">
+                  {/* Search Bar */}
+                  <div className="figma-speaker-search-bar">
+                    <Search size={14} className="figma-search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Search by name, gender or tone..."
+                      value={speakerSearch}
+                      onChange={(e) => setSpeakerSearch(e.target.value)}
+                      className="figma-speaker-search-input"
+                      title="ابحث باسم الصوت (عربي أو إنجليزي) أو طابعه الصوتي"
+                    />
+                    {speakerSearch && (
                       <button
                         type="button"
-                        className={`figma-gender-pill ${genderFilter === "all" ? "active" : ""}`}
-                        onClick={() => setGenderFilter("all")}
+                        className="figma-search-clear"
+                        onClick={() => setSpeakerSearch("")}
+                        title="مسح البحث"
                       >
-                        الكل ({speakers.length})
+                        <X size={12} />
                       </button>
-                      <button
-                        type="button"
-                        className={`figma-gender-pill ${genderFilter === "male" ? "active" : ""}`}
-                        onClick={() => setGenderFilter("male")}
-                      >
-                        رجالي
-                      </button>
-                      <button
-                        type="button"
-                        className={`figma-gender-pill ${genderFilter === "female" ? "active" : ""}`}
-                        onClick={() => setGenderFilter("female")}
-                      >
-                        حريمي
-                      </button>
-                    </div>
-
-                    {/* Speakers Scrollable List */}
-                    <div className="figma-speakers-list">
-                      {filteredSpeakers.map((s) => {
-                        const isSelected = s.speaker_id === speaker;
-                        const isPlayingSample = previewId === s.speaker_id;
-                        return (
-                          <div
-                            key={s.speaker_id}
-                            className={`figma-speaker-item ${isSelected ? "selected" : ""}`}
-                            onClick={() => {
-                              onSpeaker(s.speaker_id);
-                              onToast("ok", `تم اختيار ${s.arabic_name}`);
-                            }}
-                            role="button"
-                            tabIndex={0}
-                          >
-                            <span
-                              className={`figma-speaker-avatar ${s.gender === "female" ? "female" : "male"}`}
-                            >
-                              <GenderIcon gender={s.gender} />
-                            </span>
-                            <div className="figma-speaker-info">
-                              <span className="figma-speaker-title">
-                                <b>{s.arabic_name}</b>
-                                <small>({s.speaker_name})</small>
-                              </span>
-                              <span className="figma-speaker-tags">
-                                {s.tags.slice(0, 3).join(" · ") || s.gender}
-                              </span>
-                            </div>
-                            <div className="figma-speaker-actions">
-                              <button
-                                type="button"
-                                className="figma-sample-play-btn"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  togglePreview(s.speaker_id, assetUrl(s.audio_url));
-                                }}
-                                title="استمع لعينة من هذا الصوت"
-                              >
-                                {isPlayingSample ? (
-                                  <Eq />
-                                ) : (
-                                  <Play size={12} fill="currentColor" />
-                                )}
-                              </button>
-                              {isSelected && <Check size={14} className="figma-selected-icon" />}
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {filteredSpeakers.length === 0 && (
-                        <div className="figma-no-speakers">لا توجد نتائج مطابقة</div>
-                      )}
-                    </div>
+                    )}
                   </div>
-                ) : (
-                  /* 2. Voice Cloning Tab */
-                  <div className="figma-clone-browser">
-                    {/* Dropzone for audio upload */}
-                    <div
-                      className={`figma-dropzone ${isDragOver ? "dragover" : ""}`}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setIsDragOver(true);
-                      }}
-                      onDragLeave={() => setIsDragOver(false)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setIsDragOver(false);
-                        const file = e.dataTransfer.files[0];
-                        if (file) void handleAcceptAudioBlob(file, file.name);
-                      }}
-                      onClick={() => fileInputRef.current?.click()}
+
+                  {/* Gender Filters */}
+                  <div className="figma-gender-tabs">
+                    <button
+                      type="button"
+                      className={`figma-gender-pill ${genderFilter === "all" ? "active" : ""}`}
+                      onClick={() => setGenderFilter("all")}
+                      title="عرض جميع الأصوات المتوفرة"
                     >
-                      <Upload size={18} className="figma-upload-icon" />
-                      <span className="figma-drop-title">اسحب ملف صوتي هنا أو اضغط للاختيار</span>
-                      <small className="figma-drop-sub">٥–١٥ ثانية بصوت واضح (WAV أو MP3)</small>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="audio/*"
-                        style={{ display: "none" }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) void handleAcceptAudioBlob(file, file.name);
-                          e.target.value = "";
-                        }}
-                      />
-                    </div>
+                      All ({speakers.length})
+                    </button>
+                    <button
+                      type="button"
+                      className={`figma-gender-pill ${genderFilter === "male" ? "active" : ""}`}
+                      onClick={() => setGenderFilter("male")}
+                      title="تصفية الأصوات الرجالية فقط"
+                    >
+                      Male
+                    </button>
+                    <button
+                      type="button"
+                      className={`figma-gender-pill ${genderFilter === "female" ? "active" : ""}`}
+                      onClick={() => setGenderFilter("female")}
+                      title="تصفية الأصوات النسائية فقط"
+                    >
+                      Female
+                    </button>
+                  </div>
 
-                    <div className="figma-clone-or">أو</div>
-
-                    {/* Microphone Recording Row */}
-                    <div className="figma-mic-rec-row">
-                      <button
-                        type="button"
-                        className={`figma-mic-btn ${recording ? "recording" : ""}`}
-                        onClick={() => {
-                          if (recording) {
-                            recorderRef.current?.stop();
-                          } else {
-                            void handleStartRecording();
-                          }
-                        }}
-                        title={recording ? "إيقاف التسجيل" : "تسجيل من الميكروفون"}
-                      >
-                        {recording ? (
-                          <Square size={14} fill="currentColor" />
-                        ) : (
-                          <Mic size={16} />
-                        )}
-                      </button>
-
-                      {recording ? (
-                        <div className="figma-rec-visualizer">
-                          <div className="figma-rec-bars">
-                            {recordingLevels.map((lvl, idx) => (
-                              <div
-                                key={idx}
-                                className="figma-rec-bar"
-                                style={{ height: `${lvl * 100}%` }}
-                              />
-                            ))}
-                          </div>
-                          <span className="figma-rec-time">{formatTime(recordingSeconds)}</span>
-                        </div>
-                      ) : (
-                        <div className="figma-mic-label">
-                          <b>تسجيل بصوتك الآن</b>
-                          <small>حتى {MAX_REC} ثانية وتحدث بشكل طبيعي</small>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Loaded Reference Clip Preview */}
-                    {clip && (
-                      <div className="figma-loaded-clip">
-                        <button
-                          type="button"
-                          className="figma-clip-play-btn"
-                          onClick={handleTogglePlayClip}
-                          title={clipPlaying ? "إيقاف" : "استماع"}
-                        >
-                          <Play size={12} fill="currentColor" />
-                        </button>
-                        <div className="figma-loaded-clip-meta">
-                          <span className="figma-loaded-clip-name">{clip.name}</span>
-                          <span className="figma-loaded-clip-dur">
-                            {formatTime(clip.duration)}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          className="figma-clip-remove-btn"
+                  {/* Speakers Scrollable List */}
+                  <div className="figma-speakers-list">
+                    {filteredSpeakers.map((s) => {
+                      const isSelected = s.speaker_id === speaker;
+                      const isPlayingSample = previewId === s.speaker_id;
+                      return (
+                        <div
+                          key={s.speaker_id}
+                          className={`figma-speaker-item ${isSelected ? "selected" : ""}`}
                           onClick={() => {
-                            if (clip) URL.revokeObjectURL(clip.url);
-                            onClip(null);
+                            onSpeaker(s.speaker_id);
+                            onToast("ok", `Selected voice: ${s.speaker_name} (${s.arabic_name})`);
                           }}
-                          title="حذف المقطع المرجعي"
+                          role="button"
+                          tabIndex={0}
+                          title={`انقر لاختيار صوت ${s.arabic_name} (${s.speaker_name})`}
                         >
-                          <Trash2 size={14} />
-                        </button>
+                          <span
+                            className={`figma-speaker-avatar ${s.gender === "female" ? "female" : "male"}`}
+                          >
+                            <GenderIcon gender={s.gender} />
+                          </span>
+                          <div className="figma-speaker-info">
+                            <span className="figma-speaker-title">
+                              <b>{s.speaker_name}</b>
+                              <small>({s.arabic_name})</small>
+                            </span>
+                            <span className="figma-speaker-tags">
+                              {s.tags.slice(0, 3).join(" · ") || s.gender}
+                            </span>
+                          </div>
+                          <div className="figma-speaker-actions">
+                            <button
+                              type="button"
+                              className="figma-sample-play-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                togglePreview(s.speaker_id, assetUrl(s.audio_url));
+                              }}
+                              title="الاستماع إلى عينة صوتية مسجلة مسبقاً لهذا المتحدث"
+                              aria-label={`Preview ${s.speaker_name}`}
+                            >
+                              {isPlayingSample ? (
+                                <Eq />
+                              ) : (
+                                <Play size={11} fill="currentColor" />
+                              )}
+                            </button>
+                            {isSelected && <Check size={14} className="figma-selected-icon" />}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {filteredSpeakers.length === 0 && (
+                      <div className="figma-no-speakers">No matching voices found</div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* 2. Voice Cloning Tab */
+                <div className="figma-clone-browser">
+                  {/* Dropzone for audio upload */}
+                  <div
+                    className={`figma-dropzone ${isDragOver ? "dragover" : ""}`}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDragOver(true);
+                    }}
+                    onDragLeave={() => setIsDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsDragOver(false);
+                      const file = e.dataTransfer.files[0];
+                      if (file) void handleAcceptAudioBlob(file, file.name);
+                    }}
+                    onClick={() => fileInputRef.current?.click()}
+                    title="اسحب وأفلت ملف صوتي مرجعي هنا أو انقر للاختيار من جهازك (WAV أو MP3)"
+                  >
+                    <Upload size={18} className="figma-upload-icon" />
+                    <span className="figma-drop-title">Drop audio file here or browse</span>
+                    <small className="figma-drop-sub">5–15 seconds clear speech (WAV or MP3)</small>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="audio/*"
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void handleAcceptAudioBlob(file, file.name);
+                        e.target.value = "";
+                      }}
+                    />
+                  </div>
+
+                  <div className="figma-clone-or">OR</div>
+
+                  {/* Microphone Recording Row */}
+                  <div className="figma-mic-rec-row">
+                    <button
+                      type="button"
+                      className={`figma-mic-btn ${recording ? "recording" : ""}`}
+                      onClick={() => {
+                        if (recording) {
+                          recorderRef.current?.stop();
+                        } else {
+                          void handleStartRecording();
+                        }
+                      }}
+                      title={recording ? "إيقاف التسجيل واعتماد المقطع" : "بدء التسجيل الفوري من الميكروفون"}
+                      aria-label="Toggle recording"
+                    >
+                      {recording ? (
+                        <Square size={14} fill="currentColor" />
+                      ) : (
+                        <Mic size={16} />
+                      )}
+                    </button>
+
+                    {recording ? (
+                      <div className="figma-rec-visualizer">
+                        <div className="figma-rec-bars">
+                          {recordingLevels.map((lvl, idx) => (
+                            <div
+                              key={idx}
+                              className="figma-rec-bar"
+                              style={{ height: `${lvl * 100}%` }}
+                            />
+                          ))}
+                        </div>
+                        <span className="figma-rec-time">{formatTime(recordingSeconds)}</span>
+                      </div>
+                    ) : (
+                      <div className="figma-mic-label">
+                        <b>Record voice directly</b>
+                        <small>Speak naturally for up to {MAX_REC} seconds</small>
                       </div>
                     )}
-
-                    {/* Reference Text */}
-                    <div className="figma-field-group">
-                      <label className="figma-field-label">
-                        النص المنطوق في الملف المرجعي (اختياري)
-                      </label>
-                      <textarea
-                        className="figma-ref-textarea"
-                        placeholder="لو كتبته هتكون النتيجة أدق وأقرب للصوت الأصلي..."
-                        value={refText}
-                        onChange={(e) => onRefText(e.target.value)}
-                        dir="auto"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div className="figma-consent-note">
-                      <ShieldCheck size={14} />
-                      <span>استخدم صوتك أو صوتاً بموافقة صاحبه فقط.</span>
-                    </div>
                   </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+
+                  {/* Loaded Reference Clip Preview */}
+                  {clip && (
+                    <div className="figma-loaded-clip">
+                      <button
+                        type="button"
+                        className="figma-clip-play-btn"
+                        onClick={handleTogglePlayClip}
+                        title={clipPlaying ? "إيقاف تشغيل العينة المرجعية" : "تشغيل العينة المرجعية"}
+                      >
+                        <Play size={11} fill="currentColor" />
+                      </button>
+                      <div className="figma-loaded-clip-meta">
+                        <span className="figma-loaded-clip-name">{clip.name}</span>
+                        <span className="figma-loaded-clip-dur">{formatTime(clip.duration)}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="figma-clip-remove-btn"
+                        onClick={() => {
+                          if (clip) URL.revokeObjectURL(clip.url);
+                          onClip(null);
+                        }}
+                        title="حذف هذا المقطع المرجعي"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Reference Text */}
+                  <div className="figma-field-group">
+                    <label className="figma-field-label">
+                      Reference Transcript (optional)
+                    </label>
+                    <textarea
+                      className="figma-ref-textarea"
+                      placeholder="Enter the exact words spoken in the reference clip for maximum fidelity..."
+                      value={refText}
+                      onChange={(e) => onRefText(e.target.value)}
+                      dir="auto"
+                      rows={2}
+                      title="النص الذي تم نطقه في الملف المرجعي: كتابته بدقة ترفع من جودة مطابقة الصوت واستقراره."
+                    />
+                  </div>
+
+                  <div
+                    className="figma-consent-note"
+                    title="تنبيه الأمان والخصوصية: يجب استخدام أصوات تملك حق استخدامها بموافقة صريحة من صاحب الصوت."
+                  >
+                    <ShieldCheck size={14} />
+                    <span>Only clone voices with proper consent and authorization.</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Delivery Section */}
-        <div className="figma-inspector-section">
-          <div className="figma-section-title">Delivery / الأداء والسرعة</div>
+        {/* DELIVERY / GENERATION SETTINGS */}
+        <div className="figma-section-block">
+          <div className="figma-section-header">
+            <span className="figma-section-title">Delivery & Synthesis</span>
+            <span
+              className="figma-section-tip"
+              title="معايير التحكم في سرعة النطق ودقة توليد الصوت ومطابقة المرجع."
+            >
+              (?)
+            </span>
+          </div>
 
-          {/* Speaking Style */}
+          {/* Language / Dialect */}
           <div className="figma-field-group">
-            <div className="figma-field-label">Speaking style / النبرة</div>
+            <div className="figma-field-label-row">
+              <span className="figma-field-label">Language / Dialect</span>
+              <span
+                className="figma-hint-icon"
+                title="اللغة المستهدفة: العامية المصرية (arz) هي التخصص الأساسي للموديل، مع دعم الإنجليزية (en)."
+              >
+                (?)
+              </span>
+            </div>
             <div className="figma-dropdown-wrap">
               <select
                 className="figma-select-native"
-                value={speakingStyle}
-                onChange={(e) => onChangeSpeakingStyle(e.target.value)}
+                value={language}
+                onChange={(e) => onChangeLanguage(e.target.value as Language)}
+                title="اختر لغة أو لهجة التوليد"
               >
-                <option value="Conversational">Conversational (حوار طبيعي)</option>
-                <option value="Narrative">Narrative (سرد قصصي)</option>
-                <option value="Expressive">Expressive (تعبيري وحماسي)</option>
-                <option value="Formal">Formal (رسمي ومتقن)</option>
+                <option value="arz">Egyptian Arabic (العامية المصرية)</option>
+                <option value="en">English (US)</option>
               </select>
               <div className="figma-dropdown-display">
-                <span>{speakingStyle}</span>
-                <img src={imgChevronDown} alt="" className="figma-chevron-icon" />
+                <span>{language === "arz" ? "Egyptian Arabic (العامية المصرية)" : "English (US)"}</span>
+                <ChevronDown size={14} className="figma-dropdown-chevron" />
               </div>
             </div>
           </div>
 
           {/* Stability (Steps) Slider */}
-          <div className="figma-slider-group">
+          <div
+            className="figma-slider-group"
+            title="عدد خطوات التوليد (Diffusion Steps): قيم أعلى (32–64) تعطي صوتاً أنقى وأدق لكن تستغرق وقتاً أطول. القيمة الافتراضية 32."
+          >
             <div className="figma-slider-label-row">
-              <span className="figma-slider-name">Stability (Steps / الخطوات)</span>
+              <span className="figma-slider-name">Stability (Diffusion Steps)</span>
               <span className="figma-slider-val">{params.numStep} steps</span>
             </div>
-            <div className="figma-slider-track-wrap">
-              <input
-                type="range"
-                min={8}
-                max={64}
-                step={2}
-                value={params.numStep}
-                onChange={(e) =>
-                  onChangeParams({ ...params, numStep: Number(e.target.value) })
-                }
-                className="figma-range-input"
-              />
-              <div className="figma-slider-fill" style={{ width: `${stepsFrac}%` }} />
-              <div
-                className="figma-slider-thumb-custom"
-                style={{ left: `calc(${stepsFrac}% - 6px)` }}
-              >
-                <img src={imgStabilityThumb} alt="" width={12} height={12} />
-              </div>
+            <input
+              type="range"
+              min={8}
+              max={64}
+              step={2}
+              value={params.numStep}
+              onChange={(e) =>
+                onChangeParams({ ...params, numStep: Number(e.target.value) })
+              }
+              className="figma-range-slider"
+            />
+            <div className="figma-slider-scale">
+              <span>Fast (8)</span>
+              <span>Balanced (32)</span>
+              <span>Studio Quality (64)</span>
             </div>
           </div>
 
-          {/* Guidance Scale (CFG) */}
-          <div className="figma-slider-group">
+          {/* Guidance Scale (CFG) Slider */}
+          <div
+            className="figma-slider-group"
+            title="مقياس التوجيه (Guidance Scale / CFG): يتحكم في مدى التزام الصوت بخصائص المتحدث المرجعي ونبرته. القيمة المثالية بين 1.5 و 2.5."
+          >
             <div className="figma-slider-label-row">
-              <span className="figma-slider-name">Guidance Scale (تطابق الصوت)</span>
+              <span className="figma-slider-name">Guidance Scale (Voice Adherence)</span>
               <span className="figma-slider-val">{params.guidance.toFixed(1)}</span>
             </div>
-            <div className="figma-slider-track-wrap">
-              <input
-                type="range"
-                min={0.5}
-                max={5.0}
-                step={0.1}
-                value={params.guidance}
-                onChange={(e) =>
-                  onChangeParams({ ...params, guidance: Number(e.target.value) })
-                }
-                className="figma-range-input"
-              />
-              <div className="figma-slider-fill" style={{ width: `${guidanceFrac}%` }} />
-              <div
-                className="figma-slider-thumb-custom"
-                style={{ left: `calc(${guidanceFrac}% - 6px)` }}
-              >
-                <img src={imgStabilityThumb} alt="" width={12} height={12} />
-              </div>
+            <input
+              type="range"
+              min={0.5}
+              max={5.0}
+              step={0.1}
+              value={params.guidance}
+              onChange={(e) =>
+                onChangeParams({ ...params, guidance: Number(e.target.value) })
+              }
+              className="figma-range-slider"
+            />
+            <div className="figma-slider-scale">
+              <span>Loose (0.5)</span>
+              <span>Standard (2.0)</span>
+              <span>Strict (5.0)</span>
             </div>
           </div>
 
           {/* Speaking Rate (Speed) Slider */}
-          <div className="figma-slider-group">
+          <div
+            className="figma-slider-group"
+            title="سرعة نطق الكلام: 1.0× هي السرعة الطبيعية للمتحدث، يمكن تسريع الكلام حتى 2.0× أو إبطاؤه حتى 0.5×."
+          >
             <div className="figma-slider-label-row">
-              <span className="figma-slider-name">Speaking rate / السرعة</span>
+              <span className="figma-slider-name">Speaking Rate (Speed)</span>
               <span className="figma-slider-val">{(params.speed ?? 1.0).toFixed(2)}×</span>
             </div>
-            <div className="figma-slider-track-wrap">
-              <input
-                type="range"
-                min={0.5}
-                max={2.0}
-                step={0.05}
-                value={params.speed ?? 1.0}
-                onChange={(e) =>
-                  onChangeParams({ ...params, speed: Number(e.target.value) })
-                }
-                className="figma-range-input"
-              />
-              <div className="figma-slider-fill" style={{ width: `${speedFrac}%` }} />
-              <div
-                className="figma-slider-thumb-custom"
-                style={{ left: `calc(${speedFrac}% - 6px)` }}
-              >
-                <img src={imgStabilityThumb} alt="" width={12} height={12} />
-              </div>
+            <input
+              type="range"
+              min={0.5}
+              max={2.0}
+              step={0.05}
+              value={params.speed ?? 1.0}
+              onChange={(e) =>
+                onChangeParams({ ...params, speed: Number(e.target.value) })
+              }
+              className="figma-range-slider"
+            />
+            <div className="figma-slider-scale">
+              <span>0.5× (Slow)</span>
+              <span>1.0× (Normal)</span>
+              <span>2.0× (Fast)</span>
             </div>
           </div>
         </div>
 
-        <div className="figma-inspector-divider" />
-
-        {/* Tools Section */}
-        <div className="figma-inspector-section">
-          <div className="figma-section-title">Tools / الأدوات والمعالجة</div>
+        {/* PROCESSING & TOOLS */}
+        <div className="figma-section-block">
+          <div className="figma-section-header">
+            <span className="figma-section-title">Tools & Processing</span>
+            <span
+              className="figma-section-tip"
+              title="أدوات معالجة النصوص وتحسين النطق التلقائي."
+            >
+              (?)
+            </span>
+          </div>
 
           {/* Text Normalization Switch */}
-          <div className="figma-switch-row">
-            <span className="figma-switch-label">Arabic Normalization (تشكيل وضبط النص)</span>
+          <div
+            className="figma-switch-row"
+            title="التشكيل والمعالجة التلقائية للنص العربي: يقوم بضبط التشكيل، تصحيح الأرقام، وتجهيز النص المصري للنطق السليم."
+          >
+            <div className="figma-switch-text-group">
+              <span className="figma-switch-label">Arabic Text Normalization</span>
+              <small className="figma-switch-sub">Auto-diacritics & number conversion</small>
+            </div>
             <button
               type="button"
               className={`figma-switch-track ${params.normalize ? "on" : "off"}`}
               onClick={() => onChangeParams({ ...params, normalize: !params.normalize })}
               role="switch"
               aria-checked={params.normalize}
+              title="تفعيل/تعطيل التشكيل والمعالجة التلقائية"
             >
-              <div className="figma-switch-knob">
-                <img src={imgSpeakerBoostKnob} alt="" width={16} height={16} />
-              </div>
+              <div className="figma-switch-knob" />
             </button>
           </div>
 
           {/* Speaker Boost Switch */}
-          <div className="figma-switch-row">
-            <span className="figma-switch-label">Speaker Boost (تحسين وضوح النطق)</span>
+          <div
+            className="figma-switch-row"
+            title="تحسين وضوح مخارج الحروف والنبرة الصوتية لمنع التشويش والهمس الزائد."
+          >
+            <div className="figma-switch-text-group">
+              <span className="figma-switch-label">Speaker Clarity Boost</span>
+              <small className="figma-switch-sub">Enhances acoustic clarity and presence</small>
+            </div>
             <button
               type="button"
               className={`figma-switch-track ${speakerBoost ? "on" : "off"}`}
               onClick={() => setSpeakerBoost(!speakerBoost)}
               role="switch"
               aria-checked={speakerBoost}
+              title="تفعيل/تعطيل تحسين النبرة والوضوح"
             >
-              <div className="figma-switch-knob">
-                <img src={imgNoiseReductionKnob} alt="" width={16} height={16} />
-              </div>
+              <div className="figma-switch-knob" />
             </button>
           </div>
         </div>
 
-        <div className="figma-inspector-divider" />
-
-        {/* Advanced Settings */}
-        <div className="figma-inspector-section">
-          <div className="figma-section-title">Advanced settings / الإخراج</div>
+        {/* OUTPUT SETTINGS */}
+        <div className="figma-section-block">
+          <div className="figma-section-header">
+            <span className="figma-section-title">Export Settings</span>
+            <span
+              className="figma-section-tip"
+              title="صيغة الملف واسم الملف المولد عند التحميل."
+            >
+              (?)
+            </span>
+          </div>
 
           {/* Output Format */}
           <div className="figma-field-group">
-            <div className="figma-field-label">Output format / الصيغة</div>
+            <div className="figma-field-label">Audio Container / Format</div>
             <div className="figma-dropdown-wrap">
               <select
                 className="figma-select-native"
                 value={outputFormat}
                 onChange={(e) => setOutputFormat(e.target.value)}
+                title="اختر صيغة الملف الصوتي المولد"
               >
-                <option value="WAV · 24 kHz">WAV (Lossless · 24 kHz)</option>
-                <option value="MP3 · 320 kbps">MP3 (High Quality · 320 kbps)</option>
-                <option value="FLAC · 24-bit">FLAC (Studio · 24-bit)</option>
+                <option value="WAV · 24 kHz">WAV (Lossless · 24 kHz · Studio)</option>
+                <option value="MP3 · 320 kbps">MP3 (Compressed · 320 kbps)</option>
+                <option value="FLAC · 24-bit">FLAC (Lossless · Studio Archive)</option>
               </select>
               <div className="figma-dropdown-display">
                 <span>{outputFormat}</span>
-                <img src={imgChevronDown} alt="" className="figma-chevron-icon" />
+                <ChevronDown size={14} className="figma-dropdown-chevron" />
               </div>
             </div>
           </div>
 
           {/* File Name */}
           <div className="figma-field-group">
-            <div className="figma-field-label">File name / اسم الملف</div>
+            <div className="figma-field-label">Default Filename</div>
             <div className="figma-input-wrap">
               <input
                 type="text"
                 className="figma-text-input"
                 value={fileName}
                 onChange={(e) => setFileName(e.target.value)}
+                title="اسم الملف الصوتي عند التنزيل"
               />
             </div>
-            <span className="figma-field-hint">سيتم حفظه في مجلد التنزيلات</span>
           </div>
         </div>
       </div>
-
-      <div className="figma-inspector-divider" />
 
       {/* Footer Actions */}
       <div className="figma-inspector-footer">
@@ -802,20 +866,22 @@ export function RightInspector({
             type="button"
             className="figma-btn-save-preset"
             onClick={handleSavePreset}
+            title="حفظ الإعدادات الحالية كإعداد مسبق لجلساتك القادمة"
           >
-            {presetSaved ? "تم الحفظ ✓" : "Save preset"}
+            {presetSaved ? "Saved ✓" : "Save Preset"}
           </button>
           <button
             type="button"
             className="figma-btn-generate-main"
             onClick={onGenerate}
             disabled={busy}
+            title="توليد الصوت الآن وفق هذه الإعدادات (اختصار: Ctrl + Enter)"
           >
-            {busy ? "جاري التوليد…" : "Generate speech"}
+            {busy ? "Synthesizing…" : "Generate Speech"}
           </button>
         </div>
         <div className="figma-footer-status">
-          {busy ? "Synthesizing audio… يتم توليد الصوت الآن" : "Ready to generate · جاهز للتوليد"}
+          {busy ? "Synthesizing audio on server…" : "Ready to synthesize"}
         </div>
       </div>
     </aside>

@@ -1,20 +1,19 @@
 import type { HistoryItem } from "./Output";
 import { formatTime } from "../audio";
 import {
-  imgNavNewVoice,
-  imgNavDocs,
-  imgNavVoiceLibrary,
-  imgNavHistory,
-  imgSessionLatestPlay,
-  imgSessionLatestLiveDot,
-  imgSessionLatestPlayIcon,
-  imgSessionClipPlayIcon,
-  imgNavDashboard,
-  imgNavMyVoices,
-  imgSidebarCollapse,
-  imgNavPlayground,
-} from "../assets/figmaIcons";
-import { Pause } from "lucide-react";
+  BookOpen,
+  Compass,
+  Download,
+  FileText,
+  History,
+  LayoutDashboard,
+  Mic,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Pause,
+  Play,
+  Users,
+} from "lucide-react";
 import type { VoiceMode } from "../api";
 
 export type LeftNavTab = "playground" | "history";
@@ -62,7 +61,7 @@ export function LeftNav({
 }: LeftNavProps) {
   const currentClip = history.find((h) => h.id === currentId) || history[0];
   const activeClipTitle = currentClip
-    ? currentClip.text.slice(0, 22) + (currentClip.text.length > 22 ? "…" : "")
+    ? currentClip.text.slice(0, 24) + (currentClip.text.length > 24 ? "…" : "")
     : "";
   const activeClipDuration = currentClip ? formatTime(currentClip.duration) : "0:00";
 
@@ -87,7 +86,7 @@ export function LeftNav({
           onClick={() => onSelectTab("playground")}
           role="button"
           tabIndex={0}
-          title="Voice Studio"
+          title="Voice Studio: استوديو توليد الصوت بالعامية المصرية"
         >
           <div className="figma-brand-tile">
             <span className="figma-brand-mark">V</span>
@@ -98,10 +97,10 @@ export function LeftNav({
           type="button"
           className="figma-icon-btn figma-collapse-btn"
           onClick={onToggleCollapse}
-          title={collapsed ? "توسيع الشريط الجانبي" : "طي الشريط الجانبي"}
+          title={collapsed ? "توسيع الشريط الجانبي (عرض الخيارات كاملة)" : "طي الشريط الجانبي لتوفير مساحة للعمل"}
           aria-label="Toggle sidebar"
         >
-          <img src={imgSidebarCollapse} alt="" className="figma-asset-icon" />
+          {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
         </button>
       </div>
 
@@ -114,10 +113,10 @@ export function LeftNav({
             type="button"
             className={`figma-nav-item ${activeTab === "playground" ? "active" : ""}`}
             onClick={() => onSelectTab("playground")}
-            title="Playground"
+            title="الاستوديو التفاعلي: اكتب النص واختر المتحدث لتوليد الصوت فوراً"
           >
             <div className="figma-nav-icon-wrap">
-              <img src={imgNavPlayground} alt="" className="figma-asset-icon" />
+              <Compass size={16} />
             </div>
             {!collapsed && <span className="figma-nav-text">Playground</span>}
           </button>
@@ -125,10 +124,10 @@ export function LeftNav({
             type="button"
             className={`figma-nav-item ${activeTab === "history" ? "active" : ""}`}
             onClick={() => onSelectTab("history")}
-            title="History"
+            title="سجل الجلسة: استعراض جميع التسجيلات والمقاطع التي قمت بتوليدها"
           >
             <div className="figma-nav-icon-wrap">
-              <img src={imgNavHistory} alt="" className="figma-asset-icon" />
+              <History size={16} />
             </div>
             {!collapsed && (
               <>
@@ -143,7 +142,7 @@ export function LeftNav({
 
         {/* BUILD section */}
         <div className="figma-nav-section">
-          {!collapsed && <div className="figma-nav-label">BUILD</div>}
+          {!collapsed && <div className="figma-nav-label">BUILD & VOICES</div>}
           <button
             type="button"
             className="figma-nav-item"
@@ -151,12 +150,12 @@ export function LeftNav({
               onSelectTab("playground");
               onOpenVoiceMode("clone");
             }}
-            title="استنساخ صوت جديد في السايد بار"
+            title="استنساخ صوت جديد: رفع ملف صوتي مرجعي أو التسجيل المباشر من الميكروفون في السايد بار الأيمن"
           >
             <div className="figma-nav-icon-wrap">
-              <img src={imgNavNewVoice} alt="" className="figma-asset-icon" />
+              <Mic size={16} />
             </div>
-            {!collapsed && <span className="figma-nav-text">New voice (استنساخ)</span>}
+            {!collapsed && <span className="figma-nav-text">New Voice (Clone)</span>}
           </button>
 
           <button
@@ -166,14 +165,14 @@ export function LeftNav({
               onSelectTab("playground");
               onOpenVoiceMode("speaker");
             }}
-            title="أصوات النظام المتاحة"
+            title="أصوات النظام: تصفح واختيار أحد الأصوات الـ 19 الرسمية المتاحة في النظام"
           >
             <div className="figma-nav-icon-wrap">
-              <img src={imgNavMyVoices} alt="" className="figma-asset-icon" />
+              <Users size={16} />
             </div>
             {!collapsed && (
               <>
-                <span className="figma-nav-text">My voices</span>
+                <span className="figma-nav-text">My Voices</span>
                 <span className="figma-nav-badge-subtle">{speakersCount}</span>
               </>
             )}
@@ -186,12 +185,12 @@ export function LeftNav({
               onSelectTab("playground");
               onOpenVoiceMode("speaker");
             }}
-            title="مكتبة الأصوات"
+            title="مكتبة الأصوات: استعراض شامل للأصوات وتصنيفاتها (رجالي / حريمي / نبرات)"
           >
             <div className="figma-nav-icon-wrap">
-              <img src={imgNavVoiceLibrary} alt="" className="figma-asset-icon" />
+              <BookOpen size={16} />
             </div>
-            {!collapsed && <span className="figma-nav-text">Voice library</span>}
+            {!collapsed && <span className="figma-nav-text">Voice Library</span>}
           </button>
         </div>
 
@@ -202,10 +201,10 @@ export function LeftNav({
             type="button"
             className="figma-nav-item"
             onClick={() => onSelectTab("playground")}
-            title="Dashboard"
+            title="لوحة التحكم الرئيسية"
           >
             <div className="figma-nav-icon-wrap">
-              <img src={imgNavDashboard} alt="" className="figma-asset-icon" />
+              <LayoutDashboard size={16} />
             </div>
             {!collapsed && <span className="figma-nav-text">Dashboard</span>}
           </button>
@@ -214,28 +213,36 @@ export function LeftNav({
             href="https://github.com/MohammedAly22/VoiceTuT-TTS"
             target="_blank"
             rel="noopener noreferrer"
-            title="Documentation"
+            title="التوثيق والمستندات التقنية على GitHub"
           >
             <div className="figma-nav-icon-wrap">
-              <img src={imgNavDocs} alt="" className="figma-asset-icon" />
+              <FileText size={16} />
             </div>
             {!collapsed && <span className="figma-nav-text">Documentation</span>}
           </a>
         </div>
 
-        {/* CONVERSATION AUDIO section — REAL AUDIO CLIPS ONLY! */}
+        {/* CONVERSATION AUDIO section — FULLY SCROLLABLE FOR ALL CLIPS */}
         {!collapsed && (
           <div className="figma-conversation-audio-section">
             <div className="figma-conversation-audio-header">
-              <span className="figma-conv-title">CONVERSATION AUDIO</span>
+              <span
+                className="figma-conv-title"
+                title="تسجيلات الجلسة الصوتية: قائمة بجميع المقاطع التي تم توليدها مؤخراً"
+              >
+                SESSION AUDIO
+              </span>
               <span className="figma-conv-badge">{history.length}</span>
             </div>
 
             {history.length === 0 ? (
-              <div className="figma-empty-session">
-                <span className="figma-empty-session-text">لا توجد تسجيلات بعد</span>
+              <div
+                className="figma-empty-session"
+                title="لا توجد مقاطع صوتية بعد — اكتب نصاً واضغط على توليد لتشغيل أول مقطع"
+              >
+                <span className="figma-empty-session-text">No recordings yet</span>
                 <small className="figma-empty-session-sub">
-                  قم بتوليد أول مقطع صوتي في الاستوديو ليظهر هنا
+                  Generated audio clips will automatically appear here
                 </small>
               </div>
             ) : (
@@ -248,23 +255,13 @@ export function LeftNav({
                         type="button"
                         className="figma-session-play-btn"
                         onClick={onTogglePlay}
-                        title={isPlaying ? "إيقاف مؤقت" : "تشغيل"}
+                        title={isPlaying ? "إيقاف مؤقت (Space)" : "تشغيل هذا المقطع الصوتي (Space)"}
+                        aria-label={isPlaying ? "Pause" : "Play"}
                       >
                         {isPlaying ? (
-                          <Pause size={12} color="#181818" />
+                          <Pause size={12} fill="currentColor" />
                         ) : (
-                          <>
-                            <img
-                              src={imgSessionLatestPlay}
-                              alt=""
-                              className="figma-session-play-circle"
-                            />
-                            <img
-                              src={imgSessionLatestPlayIcon}
-                              alt=""
-                              className="figma-session-play-triangle"
-                            />
-                          </>
+                          <Play size={12} fill="currentColor" />
                         )}
                       </button>
                       <div className="figma-active-clip-info">
@@ -275,10 +272,9 @@ export function LeftNav({
                           {activeClipDuration} · {currentClip.voice}
                         </div>
                       </div>
-                      <img
-                        src={imgSessionLatestLiveDot}
-                        alt=""
-                        className="figma-session-live-dot"
+                      <span
+                        className="figma-session-live-dot-solid"
+                        title="المقطع المحدد حالياً للتشغيل"
                       />
                     </div>
 
@@ -289,11 +285,8 @@ export function LeftNav({
                         return (
                           <div
                             key={idx}
-                            className="figma-session-bar"
-                            style={{
-                              height: `${barHeight}px`,
-                              backgroundColor: isPlayed ? "#a7b8aa" : "#444444",
-                            }}
+                            className={`figma-session-bar ${isPlayed ? "played" : "unplayed"}`}
+                            style={{ height: `${barHeight}px` }}
                           />
                         );
                       })}
@@ -307,46 +300,51 @@ export function LeftNav({
                   </div>
                 )}
 
-                {/* Recent Clips List */}
-                <div className="figma-recent-clips-list">
-                  {history.slice(0, 4).map((item, i) => (
+                {/* All Generated Clips — SCROLLABLE CONTAINER! */}
+                <div
+                  className="figma-recent-clips-list scrollable"
+                  title="اسحب للتمرير وعرض جميع المقاطع الصوتية المولدة في هذه الجلسة"
+                >
+                  {history.map((item, i) => (
                     <div
                       key={item.id}
                       className={`figma-recent-clip-row ${item.id === currentId ? "active" : ""}`}
                       onClick={() => onSelectHistory?.(item)}
                       role="button"
                       tabIndex={0}
+                      title={`انقر لتحميل وتشغيل هذا المقطع: "${item.text}"`}
                     >
                       <div className="figma-clip-tile">
-                        <img src={imgSessionClipPlayIcon} alt="" className="figma-clip-play-ico" />
+                        <Play size={10} fill="currentColor" />
                       </div>
                       <div className="figma-recent-clip-meta">
                         <span className="figma-recent-clip-title">
-                          {item.text.slice(0, 20)}…
+                          {item.text.slice(0, 24)}…
                         </span>
                         <span className="figma-recent-clip-time">
-                          {formatTime(item.duration)} · {i === 0 ? "الآن" : `${item.voice}`}
+                          {formatTime(item.duration)} · {i === 0 ? "Latest" : item.voice}
                         </span>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Conversation Audio Footer */}
+                {/* Session Audio Footer */}
                 <div className="figma-sidebar-conv-footer">
                   <div className="figma-conv-summary">
-                    <span className="figma-conv-clips-count">{history.length} مقاطع</span>
+                    <span className="figma-conv-clips-count">{history.length} clips</span>
                     <span className="figma-conv-total-time">
-                      {formatTotalTime(totalDurationSeconds)} إجمالي
+                      {formatTotalTime(totalDurationSeconds)} total
                     </span>
                   </div>
                   <button
                     type="button"
                     className="figma-export-all-btn"
                     onClick={onExportAll}
-                    title="تصدير جميع مقاطع الصوت المولدة كملفات WAV"
+                    title="تصدير وتحميل جميع المقاطع الصوتية المولدة في هذه الجلسة كملفات WAV منفصلة"
                   >
-                    تصدير الكل
+                    <Download size={12} />
+                    <span>Export All</span>
                   </button>
                 </div>
               </>

@@ -1,8 +1,8 @@
 import {
-  imgTopAdd,
-  imgTopMore,
-  imgSidebarCollapse,
-} from "../assets/figmaIcons";
+  PanelLeftOpen,
+  Plus,
+  SlidersHorizontal,
+} from "lucide-react";
 
 export interface PlaygroundHeaderProps {
   leftNavCollapsed: boolean;
@@ -25,35 +25,54 @@ export function PlaygroundHeader({
       <div className="figma-topbar-left">
         {leftNavCollapsed && (
           <button
+            type="button"
             className="figma-icon-btn figma-topbar-expand"
             onClick={onToggleLeftNav}
-            title="Expand sidebar"
+            title="توسيع الشريط الجانبي الأيسر"
             aria-label="Expand sidebar"
           >
-            <img src={imgSidebarCollapse} alt="" className="figma-asset-icon" />
+            <PanelLeftOpen size={16} />
           </button>
         )}
         <div className="figma-topbar-titles">
-          <span className="figma-topbar-title">Playground</span>
-          <span className="figma-topbar-sub">Speech generation</span>
+          <span
+            className="figma-topbar-title"
+            title="بيئة العمل التفاعلية لتوليد واختبار الأصوات"
+          >
+            Voice Studio Playground
+          </span>
+          <span
+            className="figma-topbar-sub"
+            title="تحويل النصوص إلى كلام واقعي بالعامية المصرية"
+          >
+            Egyptian Arabic Neural Speech Synthesis
+          </span>
         </div>
       </div>
 
       <div className="figma-topbar-actions">
         <button
+          type="button"
           className="figma-icon-btn"
           onClick={onClearSession}
-          title="New session"
+          title="جلسة جديدة: مسح النص الحالي وإعادة ضبط المشغل الصوتي"
+          aria-label="New session"
         >
-          <img src={imgTopAdd} alt="Add" className="figma-topbar-icon" />
+          <Plus size={16} />
         </button>
 
         <button
+          type="button"
           className={`figma-icon-btn ${rightInspectorOpen ? "active" : ""}`}
           onClick={onToggleRightInspector}
-          title="Run settings"
+          title={
+            rightInspectorOpen
+              ? "إخفاء لوحة الإعدادات الجانبية"
+              : "فتح لوحة الإعدادات الجانبية (Run Settings)"
+          }
+          aria-label="Toggle inspector"
         >
-          <img src={imgTopMore} alt="More" className="figma-topbar-icon" />
+          <SlidersHorizontal size={16} />
         </button>
       </div>
     </header>

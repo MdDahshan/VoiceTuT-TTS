@@ -23,8 +23,6 @@ import { stopPreview, useEngine, useFrame, useToasts } from "./hooks";
 const DEFAULT_SCRIPT =
   "النهارده الجو حلو أوي في إسكندرية، يلا نطلع نتمشى شوية على الكورنيش ونشرب قهوة سوا.";
 
-const SPEAKING_STYLES = ["Conversational", "Narrative", "Expressive", "Formal"];
-
 const DEFAULT_SPEAKERS = [
   { speaker_id: "Mohammed", speaker_name: "Mohammed", arabic_name: "محمد", gender: "male", tags: ["طبيعي", "سرد"], reference_text: "", audio_url: "voices/Mohammed" },
   { speaker_id: "Ahmed", speaker_name: "Ahmed", arabic_name: "أحمد", gender: "male", tags: ["شبابي", "حماسي"], reference_text: "", audio_url: "voices/Ahmed" },
@@ -78,13 +76,12 @@ export default function App() {
   const [activeLeftTab, setActiveLeftTab] = useState<LeftNavTab>("playground");
 
   const [text, setText] = useState(DEFAULT_SCRIPT);
-  const [language] = useState<Language>("arz");
+  const [language, setLanguage] = useState<Language>("arz");
   const [voiceMode, setVoiceMode] = useState<VoiceMode>("speaker");
   const [speaker, setSpeaker] = useState<string | null>("Mohammed");
   const [clip, setClip] = useState<RefClip | null>(null);
   const [refText, setRefText] = useState("");
   const [params, setParams] = useState<Params>(loadParams);
-  const [speakingStyle, setSpeakingStyle] = useState("Conversational");
 
   const [run, setRun] = useState<RunState>("idle");
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -114,7 +111,7 @@ export default function App() {
               s ??
               i.speakers.find((x) => x.speaker_name === "Mohammed")?.speaker_id ??
               i.speakers[0]?.speaker_id ??
-              null,
+              "Mohammed",
           );
         })
         .catch(() => {
@@ -159,20 +156,21 @@ export default function App() {
   const busy = run === "busy";
   const maxChars = info?.max_chars ?? 3000;
 
-  const availableSpeakers = info?.speakers && info.speakers.length > 0 ? info.speakers : DEFAULT_SPEAKERS;
+  const availableSpeakers =
+    info?.speakers && info.speakers.length > 0 ? info.speakers : DEFAULT_SPEAKERS;
   const currentSpeakerObj = availableSpeakers.find((s) => s.speaker_id === speaker);
   const activeVoiceName =
     voiceMode === "clone"
-      ? clip?.name || "صوت مستنسخ"
-      : currentSpeakerObj?.arabic_name
-        ? `${currentSpeakerObj.arabic_name} (${currentSpeakerObj.speaker_name})`
-        : "محمد (Mohammed)";
+      ? clip?.name || "Cloned Voice"
+      : currentSpeakerObj?.speaker_name
+        ? `${currentSpeakerObj.speaker_name} (${currentSpeakerObj.arabic_name})`
+        : "Mohammed (محمد)";
   const activeVoiceDetails =
     voiceMode === "clone"
       ? clip
-        ? `صوت مرجعي · ${formatTime(clip.duration)}`
-        : "اضغط لتسجيل أو رفع صوت مرجعي"
-      : `${currentSpeakerObj?.gender === "female" ? "مصرية · أنثى" : "مصري · ذكر"} · ${currentSpeakerObj?.tags?.join(" · ") || "طبيعي"}`;
+        ? `Custom voice sample · ${formatTime(clip.duration)}`
+        : "Click to record or upload reference voice"
+      : `${currentSpeakerObj?.gender === "female" ? "Female" : "Male"} · Egyptian Arabic · ${currentSpeakerObj?.tags?.join(" · ") || "Natural"}`;
 
   const addHistory = (
     audio: ArrayBuffer,
@@ -182,21 +180,21 @@ export default function App() {
     t: string,
   ) => {
     const id = Date.now();
-    setHistory((h) => [{ id, text: t, voice, duration, audio, metrics: m }, ...h].slice(0, 30));
+    setHistory((h) => [{ id, text: t, voice, duration, audio, metrics: m }, ...h].slice(0, 50));
     setCurrentId(id);
   };
 
   const handleGenerate = async () => {
     if (busy) return;
     const t = text.trim();
-    if (!t) return push("info", "من فضلك اكتب النص المراد توليده أولاً");
-    if (t.length > maxChars) return push("error", `النص يتجاوز الحد الأقصى (${maxChars} حرف)`);
-    if (!info) return push("error", "جاري الاتصال بالخادم، يرجى الانتظار ثوانٍ معدودة");
-    if (voiceMode === "speaker" && !speaker) return push("info", "يرجى اختيار صوت أولاً من السايد بار");
+    if (!t) return push("info", "Please enter text to generate speech / اكتب النص المراد توليده");
+    if (t.length > maxChars) return push("error", `Script exceeds maximum character limit (${maxChars} chars)`);
+    if (!info) return push("error", "Server is initializing, please wait a moment");
+    if (voiceMode === "speaker" && !speaker) return push("info", "Please select a voice from the sidebar");
     if (voiceMode === "clone" && !clip) {
       setRightInspectorOpen(true);
       setRightInspectorVoiceExpanded(true);
-      return push("info", "يرجى تسجيل أو رفع مقطع صوتي مرجعي في السايد بار للاستنساخ");
+      return push("info", "Please upload or record a reference voice sample in the sidebar for cloning");
     }
 
     stopPreview();
@@ -224,7 +222,7 @@ export default function App() {
       await engine.load(audio);
       addHistory(audio, m, m.audio, voice, t);
       setRun("ready");
-      push("ok", `تم توليد الصوت بنجاح في ${m.total.toFixed(2)} ثانية`);
+      push("ok", `Speech generated in ${m.total.toFixed(2)}s`);
     } catch (e) {
       engine.reset();
       setRun("error");
@@ -243,16 +241,17 @@ export default function App() {
     setText("");
     engine.reset();
     setCurrentTime(0);
-    push("info", "تم بدء جلسة جديدة ونظيفة");
+    push("info", "Clean session started");
   };
 
-  const handleCycleSpeakingStyle = () => {
-    const nextIdx = (SPEAKING_STYLES.indexOf(speakingStyle) + 1) % SPEAKING_STYLES.length;
-    setSpeakingStyle(SPEAKING_STYLES[nextIdx]);
+  const handleToggleLanguage = () => {
+    const nextLang = language === "arz" ? "en" : "arz";
+    setLanguage(nextLang);
+    push("info", `Language set to ${nextLang === "arz" ? "Egyptian Arabic (العامية المصرية)" : "English (US)"}`);
   };
 
   const handleExportAll = () => {
-    if (!history.length) return push("info", "لا توجد تسجيلات لتصديرها بعد");
+    if (!history.length) return push("info", "No audio recordings to export");
     history.forEach((h, idx) => {
       const blob = new Blob([h.audio], { type: "audio/wav" });
       const url = URL.createObjectURL(blob);
@@ -262,7 +261,7 @@ export default function App() {
       a.click();
       URL.revokeObjectURL(url);
     });
-    push("ok", `تم تصدير ${history.length} مقطع صوتي بصيغة WAV`);
+    push("ok", `Exported ${history.length} audio clips as WAV`);
   };
 
   const handleOpenVoiceMode = (mode: VoiceMode = "speaker") => {
@@ -277,7 +276,7 @@ export default function App() {
     } else if (text.trim() && !busy) {
       void handleGenerate();
     } else {
-      push("info", "اكتب نصاً واضغط على توليد لتشغيل الصوت");
+      push("info", "Enter text and click Generate Speech to synthesize audio");
     }
   };
 
@@ -319,15 +318,22 @@ export default function App() {
             <div className="studio-history-head">
               <div className="history-head-title">
                 <History size={18} />
-                <h2>History ({history.length})</h2>
+                <h2>Recording History ({history.length})</h2>
               </div>
-              <p>سجل المقاطع والتسجيلات المولدة في هذه الجلسة</p>
+              <p
+                title="سجل المقاطع والتسجيلات الصوتية المولدة في هذه الجلسة مع إمكانية إعادة تشغيلها وتحميلها"
+              >
+                Generated speech clips and session audio recordings
+              </p>
             </div>
             {history.length === 0 ? (
-              <div className="empty-history-box">
+              <div
+                className="empty-history-box"
+                title="لا توجد تسجيلات بعد — اكتب نصاً واضغط على توليد الصوت لإنشاء أول مقطع"
+              >
                 <History size={32} />
-                <p>لا توجد تسجيلات مولدة حتى الآن</p>
-                <small>ستظهر جميع التسجيلات الصوتية تلقائياً فور توليدها</small>
+                <p>No audio clips generated yet</p>
+                <small>Generated speech clips will automatically appear here</small>
               </div>
             ) : (
               <div className="history-cards-grid">
@@ -338,6 +344,7 @@ export default function App() {
                     onClick={() => handleSelectHistory(h)}
                     role="button"
                     tabIndex={0}
+                    title={`انقر لتحميل وتشغيل هذا المقطع: "${h.text}"`}
                   >
                     <div className="card-top">
                       <span className="voice-badge">{h.voice}</span>
@@ -357,8 +364,8 @@ export default function App() {
             onTextChange={setText}
             voiceName={activeVoiceName}
             voiceDetails={activeVoiceDetails}
-            speakingStyle={speakingStyle}
-            onCycleSpeakingStyle={handleCycleSpeakingStyle}
+            language={language}
+            onToggleLanguage={handleToggleLanguage}
             modelName="VoiceTut-TTS v1"
             onOpenVoicePicker={handleOpenVoiceMode}
             busy={busy}
@@ -380,6 +387,8 @@ export default function App() {
         info={info}
         params={params}
         onChangeParams={setParams}
+        language={language}
+        onChangeLanguage={setLanguage}
         voiceMode={voiceMode}
         onVoiceMode={setVoiceMode}
         speaker={speaker}
@@ -389,8 +398,6 @@ export default function App() {
         onClip={setClip}
         refText={refText}
         onRefText={setRefText}
-        speakingStyle={speakingStyle}
-        onChangeSpeakingStyle={setSpeakingStyle}
         onGenerate={handleGenerate}
         busy={busy}
         onToast={push}
